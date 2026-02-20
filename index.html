@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bayesian Quiz</title>
+  <!--script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/tex-mml-chtml.js"></script-->
+  <script>
+  MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    macros: {
+      R: '\\mathbb{R}',
+      N: '\\mathbb{N}',
+      Z: '\\mathbb{Z}',
+      Q: '\\mathbb{Q}'
+     }
+    }
+   };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="quiz-wrap">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <header>
+    <div class="tag">QCM Bayesien &middot; </div>
+    
+    <h1>Évaluer sa <span>confiance</span> en ses connaissances.</h1>
+    
+    <p class="subtitle">
+      Ne choissez pas seulement une réponse ; exprimez <em>à quel degré</em> vous êtes confiant en votre réponse.<br>
+      Le calcul des notes récompense l'honnêteté dans l'incertitude : la meilleure stratégie est toujours de donner sincèrement la valeur de vos croyances.
+    </p>
+  </header>
+
+  <!-- ── Progress bar + live score ──────────────────────────────────────────── -->
+  <div class="top-bar">
+    <span id="progressLabel">0 / … confirmé</span>
+    <span class="live-score-label">Score: <strong id="liveScore">— pts</strong></span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- ── Questions (filled dynamically by quiz.js) ──────────────────────────── -->
+  <div id="questionsContainer"></div>
+
+  <!-- ── Result panel ───────────────────────────────────────────────────────── -->
+  <div class="result-panel" id="resultPanel">
+    <div class="score-ring">
+      <svg viewBox="0 0 110 110" width="120" height="120">
+        <circle class="ring-bg"   cx="55" cy="55" r="46"/>
+        <circle class="ring-fill" id="ringFill" cx="55" cy="55" r="46"
+                stroke-dasharray="289"
+                stroke-dashoffset="289"/>
+      </svg>
+      <div class="score-num-wrap">
+        <span class="score-num" id="scoreNum">0</span>
+        <span class="score-max" id="scoreMax">/ 0 pts</span>
+      </div>
+    </div>
+    <div class="result-title" id="resultTitle">—</div>
+    <div class="result-sub"   id="resultSub">—</div>
+    <button class="btn-restart" onclick="restartQuiz()">↺ Réessayer</button>
+  </div>
+
+</div><!-- /.quiz-wrap -->
+
+<script src="quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,809 @@
+#+CATEGORY: TEACHING
+#+FILETAGS: Teaching Tsi QCM
+
+#+SETUPFILE:../../latex2.setup
+
+#+MACRO: box @@latex:\fbox{{$1}}@@
+#+MACRO: image @@latex:\includegraphics[scale = $1]{$2}@@
+
+* Aside                                                :noexport:
+
+file:data.json
+
+file:quiz.js
+
+** Exemple de Structure du fichier json
+
+#+begin_src json :tangle no
+[
+  {
+    "text": "The Earth is closer to the Sun in January than in July.",
+    "answers": ["True", "False"],
+    "correct": 0,
+    "explanation": "Yes — the Earth reaches perihelion (closest point) around January 3rd. Northern hemisphere winters are cold despite this because of axial tilt, not distance."
+  },
+  {
+    "text": "Which planet has the most moons in our Solar System?",
+    "answers": ["Jupiter", "Saturn", "Uranus", "Neptune"],
+    "correct": 1,
+    "explanation": "Saturn currently holds the record with 146 confirmed moons (as of 2023), surpassing Jupiter's 95."
+  },
+  {
+    "text": "Light travels faster in water than in a vacuum.",
+    "answers": ["True", "False"],
+    "correct": 1,
+    "explanation": "False — light travels slower in any medium. In water it moves at roughly 75% of its vacuum speed."
+  },
+  {
+    "text": "Which of these is NOT a probability axiom (Kolmogorov)?",
+    "answers": [
+      "P(Ω) = 1",
+      "P(A) ≥ 0 for all A",
+      "P(A ∪ B) = P(A) · P(B) for disjoint A, B",
+      "P(A ∪ B) = P(A) + P(B) for disjoint A, B"
+    ],
+    "correct": 2,
+    "explanation": "The third axiom is additivity: P(A ∪ B) = P(A) + P(B) for disjoint events. Multiplying probabilities gives the joint probability of independent events — a different concept."
+  },
+  {
+    "text": "Python was created before Java.",
+    "answers": ["True", "False"],
+    "correct": 0,
+    "explanation": "Python's first version appeared in 1991; Java launched in 1995."
+  }
+]
+#+end_src
+
+* JS
+:PROPERTIES:
+:header-args: :tangle quiz.js
+:END:
+
+#+name: scoring-rule 
+#+begin_src js :tangle no
+/*   Swap this single function to change the scoring rule.
+
+   Arguments:
+     p_correct  : float in (0, 1] — probability the student assigned to the
+                  correct answer
+     n          : int — total number of answer choices
+
+   Returns a score in [0, 100].
+
+   Current rule: NORMALISED LOGARITHMIC (log score)
+   ─────────────────────────────────────────────────
+   Raw log score = ln(p_correct).
+     • Maximum:  ln(1)     = 0   (student was 100% confident and right)
+     • Baseline: ln(1/n)   < 0   (student spread probability equally = no info)
+     • Minimum:  ln(ε) → -∞     (student was 100% confident and WRONG)
+
+   We normalise so that:
+     • Equal spread (no info)    →  0 pts
+     • Perfectly correct         → 100 pts
+     • Overconfident and wrong   → negative pts (can go very low)
+
+   This is a PROPER scoring rule: the only strategy that maximises your
+   *expected* score is to report your genuine beliefs.
+────────────────────────────────────────────────────────────────────────────── */
+function scoringRule(p_correct, n) {
+  const epsilon  = 0.001;                    // avoid log(0)
+  const p        = Math.max(p_correct, epsilon);
+  const baseline = Math.log(1 / n);         // score of a uniform guess
+  const best     = Math.log(1);             // = 0, score of a perfect answer
+  const raw      = Math.log(p);
+
+  // Linear map: baseline → 0, best → 100
+  return ((raw - baseline) / (best - baseline)) * 100;
+}
+
+#+end_src
+
+#+name: state
+#+begin_src js :tangle no
+let questions   = [];
+let answered    = 0;
+let totalScore  = 0;
+// probs[qi] = Float32Array of current slider values for question qi
+const probs     = {};
+#+end_src
+
+#+name: lecture-data
+#+begin_src js :tangle no
+fetch('data.json')
+  .then(r => { if (!r.ok) throw new Error('Could not load data.json'); return r.json(); })
+  .then(data => { questions = data; renderQuestions(); })
+  .catch(err => {
+    document.getElementById('questionsContainer').innerHTML =
+      `<p class="load-error">⚠️ ${err.message}</p>`;
+  });
+#+end_src
+
+#+name: render
+#+begin_src js :tangle no
+function renderQuestions() {
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+  answered   = 0;
+  totalScore = 0;
+  updateScoreBar();
+
+  questions.forEach((q, qi) => {
+    const n = q.answers.length;
+    const isTF = n === 2 &&
+      q.answers[0].toLowerCase() === 'true' &&
+      q.answers[1].toLowerCase() === 'false';
+
+    // Initialise uniform distribution
+    probs[qi] = new Array(n).fill(1 / n);
+
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `card-${qi}`;
+    card.setAttribute('data-n', qi + 1);
+    card.style.animationDelay = (qi * 0.07) + 's';
+
+    card.innerHTML = `
+      <div class="question-text">${qi + 1}. ${q.text}</div>
+      ${isTF ? renderTrueFalse(qi) : renderSliders(qi, q)}
+      <div class="slider-hint">Déplace le${n > 2 ? 's' : ''} slider${n > 2 ? 's' : ''} pour indiquer ton niveau de confiance puis confirme.</div>
+      <button class="btn-confirm" onclick="confirmAnswer(${qi})">Confirmer</button>
+      <div class="feedback" id="fb-${qi}"></div>
+    `;
+    container.appendChild(card);
+
+    // Wire up sliders after insertion
+    if (isTF) {
+      wireTrueFalse(qi);
+    } else {
+      wireSliders(qi, n);
+    }
+  });
+
+    updateProgress();
+    MathJax.typesetPromise();
+}
+#+end_src
+
+#+name: truefalse-layout
+#+begin_src js :tangle no
+function renderTrueFalse(qi) {
+  return `
+    <div class="tf-wrap">
+      <div class="tf-labels">
+        <span class="tf-label false-label">Faux</span>
+        <span class="tf-label true-label">Vrai</span>
+      </div>
+      <div class="tf-slider-row">
+        <div class="tf-pct" id="pct-false-${qi}">50%</div>
+        <input type="range" class="slider tf-slider" id="tf-${qi}"
+               min="0" max="100" value="50" step="1">
+        <div class="tf-pct" id="pct-true-${qi}">50%</div>
+      </div>
+      <!--<div class="tf-bar-wrap">
+        <div class="tf-bar-false" id="bar-false-${qi}" style="width:50%"></div>
+        <div class="tf-bar-true"  id="bar-true-${qi}"  style="width:50%"></div>
+      </div>-->
+    </div>`;
+}
+
+function wireTrueFalse(qi) {
+  const slider = document.getElementById(`tf-${qi}`);
+  slider.addEventListener('input', () => {
+    const pTrue  = slider.value / 100;
+    const pFalse = 1 - pTrue;
+    probs[qi][0] = pTrue;
+    probs[qi][1] = pFalse;
+    document.getElementById(`pct-true-${qi}`).textContent  = pct(pTrue);
+    document.getElementById(`pct-false-${qi}`).textContent = pct(pFalse);
+    document.getElementById(`bar-true-${qi}`).style.width  = pct(pTrue);
+    document.getElementById(`bar-false-${qi}`).style.width = pct(pFalse);
+  });
+}
+#+end_src
+
+#+name: n-answ-layout
+#+begin_src js :tangle no
+function renderSliders(qi, q) {
+  return q.answers.map((ans, ai) => `
+    <div class="slider-row" id="row-${qi}-${ai}">
+      <div class="slider-answer">${ans}</div>
+      <div class="slider-track-wrap">
+        <input type="range" class="slider" id="sl-${qi}-${ai}"
+               min="0" max="100" value="${Math.round(100 / q.answers.length)}" step="1">
+        <div class="slider-fill" id="fill-${qi}-${ai}"
+             style="width:${Math.round(100 / q.answers.length)}%"></div>
+      </div>
+      <div class="slider-pct" id="pct-${qi}-${ai}">${Math.round(100 / q.answers.length)}%</div>
+    </div>
+  `).join('');
+}
+
+function wireSliders(qi, n) {
+  for (let ai = 0; ai < n; ai++) {
+    const sl = document.getElementById(`sl-${qi}-${ai}`);
+    sl.addEventListener('input', () => onSliderMove(qi, ai, n));
+  }
+}
+
+function onSliderMove(qi, movedAi, n) {
+  const newVal  = document.getElementById(`sl-${qi}-${movedAi}`).value / 100;
+  const oldVals = probs[qi].slice();
+  const sumOthers = oldVals.reduce((s, v, i) => i === movedAi ? s : s + v, 0);
+  const remaining = 1 - newVal;
+
+  probs[qi][movedAi] = newVal;
+
+  for (let ai = 0; ai < n; ai++) {
+    if (ai === movedAi) continue;
+    // Proportional redistribution; if others were all 0, split equally
+    probs[qi][ai] = sumOthers > 0
+      ? (oldVals[ai] / sumOthers) * remaining
+      : remaining / (n - 1);
+  }
+
+  // Re-normalise to fix floating-point drift
+  const total = probs[qi].reduce((a, b) => a + b, 0);
+  probs[qi] = probs[qi].map(v => v / total);
+
+  refreshSliderUI(qi, n);
+}
+
+function refreshSliderUI(qi, n) {
+  for (let ai = 0; ai < n; ai++) {
+    const p = probs[qi][ai];
+    document.getElementById(`sl-${qi}-${ai}`).value          = Math.round(p * 100);
+    document.getElementById(`fill-${qi}-${ai}`).style.width  = pct(p);
+    document.getElementById(`pct-${qi}-${ai}`).textContent   = pct(p);
+  }
+}
+#+end_src
+
+#+name: confirm
+#+begin_src js :tangle no
+function confirmAnswer(qi) {
+  const q       = questions[qi];
+  const n       = q.answers.length;
+  const correct = q.correct;
+  const p_c     = probs[qi][correct];
+  const pts     = scoringRule(p_c, n);
+
+  // Lock sliders
+  const isTF = n === 2 &&
+    q.answers[0].toLowerCase() === 'true' &&
+    q.answers[1].toLowerCase() === 'false';
+
+  if (isTF) {
+    document.getElementById(`tf-${qi}`).disabled = true;
+  } else {
+    for (let ai = 0; ai < n; ai++)
+      document.getElementById(`sl-${qi}-${ai}`).disabled = true;
+  }
+  document.querySelector(`#card-${qi} .btn-confirm`).disabled = true;
+  document.querySelector(`#card-${qi} .slider-hint`).style.display = 'none';
+
+  // Highlight correct answer
+  if (isTF) {
+    const side = correct === 0 ? 'true' : 'false';
+    document.querySelector(`#card-${qi} .tf-label.${side}-label`)
+            .classList.add('highlight-correct');
+  } else {
+    document.getElementById(`row-${qi}-${correct}`).classList.add('row-correct');
+  }
+
+  // Show feedback
+  const fb = document.getElementById(`fb-${qi}`);
+  const sign = pts >= 0 ? '+' : '';
+  const ptsCls = pts >= 0 ? 'pts-pos' : 'pts-neg';
+  fb.className = 'feedback show';
+  fb.innerHTML = `
+    <div class="fb-explanation">
+      <strong>Réponse correcte:</strong> ${q.answers[correct]}<br>
+      ${q.explanation}
+    </div>
+    <div class="fb-score">
+      Tu as donné <strong>${pct(p_c)}</strong> à la bonne réponse.
+      <span class="pts ${ptsCls}">${sign}${pts.toFixed(1)} pts</span>
+    </div>`;
+
+  totalScore += pts;
+  answered++;
+  updateProgress();
+  updateScoreBar();
+
+    if (answered === questions.length) setTimeout(showResult, 700);
+  MathJax.typesetPromise();
+}
+#+end_src
+
+#+name: progress
+#+begin_src js :tangle no
+function updateProgress() {
+  const pct_ = questions.length > 0 ? answered / questions.length : 0;
+  document.getElementById('progressBar').style.width = (pct_ * 100) + '%';
+  document.getElementById('progressLabel').textContent =
+    `${answered} / ${questions.length} confirmed`;
+}
+
+function updateScoreBar() {
+  const maxPossible = questions.length * 100;
+  const display = answered === 0
+    ? '— pts'
+    : `${totalScore.toFixed(1)} / ${(answered * 100).toFixed(0)} pts`;
+  document.getElementById('liveScore').textContent = display;
+}
+#+end_src
+
+#+name: results
+#+begin_src js :tangle no
+function showResult() {
+  const panel   = document.getElementById('resultPanel');
+  const maxPts  = questions.length * 100;
+  const pct_    = Math.max(0, totalScore / maxPts); // can be negative
+
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // Animate ring
+  const circumference = 2 * Math.PI * 46;
+  const ring = document.getElementById('ringFill');
+  ring.style.strokeDashoffset = circumference * (1 - Math.min(1, Math.max(0, pct_)));
+  ring.style.stroke =
+    pct_ >= 0.8 ? 'var(--correct)' :
+    pct_ >= 0.5 ? 'var(--accent2)' :
+    pct_ >= 0    ? 'var(--accent)' : 'var(--wrong)';
+
+  document.getElementById('scoreNum').textContent =
+    `${totalScore.toFixed(0)}`;
+  document.getElementById('scoreMax').textContent =
+    `/ ${maxPts}`;
+
+  const idx   = Math.min(Math.round(Math.max(0, pct_) * 4), 4);
+  const titles = ['Keep practising!', 'Good effort!', 'Well done!', 'Excellent!', 'Perfect calibration!'];
+  const subs   = [
+    'Your confidence estimates need work — review the explanations above.',
+    'Some good estimates. Aim to match your confidence to your actual knowledge.',
+    'Solid calibration overall. The log score rewards honest uncertainty.',
+    'Very well calibrated! Your stated beliefs closely matched your knowledge.',
+    'Outstanding — your confidence was perfectly aligned with your knowledge!'
+  ];
+  document.getElementById('resultTitle').textContent = titles[idx];
+  document.getElementById('resultSub').textContent   = subs[idx];
+}
+#+end_src
+
+#+begin_src js :noweb yes
+/* ══════════════════════════════════════════════════════════════════════════════
+   quiz.js  —  Bayesian MCQ engine
+   Reads questions from data.json. Uses linked probability sliders and a
+   proper scoring rule to reward honest confidence estimates.
+══════════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── SCORING FORMULA ────────────────────────────────────────────────────────── */
+<<scoring-rule>>
+
+/* ── STATE ───────────────────────────────────────────────────────────────────── */
+<<state>>
+
+/* ── BOOTSTRAP ───────────────────────────────────────────────────────────────── */
+<<lecture-data>>
+
+/* ── RENDER ──────────────────────────────────────────────────────────────────── */
+<<render>>
+
+/* ── TRUE / FALSE LAYOUT ─────────────────────────────────────────────────────
+   One slider for P(True); P(False) updates automatically.
+────────────────────────────────────────────────────────────────────────────── */
+<<truefalse-layout>>
+
+/* ── N-ANSWER LINKED SLIDERS ─────────────────────────────────────────────────
+   Moving one slider redistributes the remaining probability
+   proportionally among the others.
+────────────────────────────────────────────────────────────────────────────── */
+<<n-answ-layout>>
+
+/* ── CONFIRM ─────────────────────────────────────────────────────────────────── */
+<<confirm>>
+
+
+/* ── PROGRESS & SCORE BAR ────────────────────────────────────────────────────── */
+<<progress>>
+
+/* ── RESULT ──────────────────────────────────────────────────────────────────── */
+
+<<results>>
+
+/* ── RESTART ─────────────────────────────────────────────────────────────────── */
+function restartQuiz() {
+  document.getElementById('resultPanel').classList.remove('show');
+  renderQuestions();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+/* ── UTILITY ─────────────────────────────────────────────────────────────────── */
+function pct(p) { return Math.round(p * 100) + '%'; }
+#+end_src
+
+* Html
+:PROPERTIES:
+:header-args: :tangle index.html
+:END:
+
+#+name: head
+#+begin_src html :tangle no
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bayesian Quiz</title>
+<!--script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/tex-mml-chtml.js"></script-->
+<script>
+MathJax = {
+tex: {
+  inlineMath: [['$', '$']],
+  macros: {
+    R: '\\mathbb{R}',
+    N: '\\mathbb{N}',
+    Z: '\\mathbb{Z}',
+    Q: '\\mathbb{Q}'
+   }
+  }
+ };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+#+end_src
+
+#+name: header
+#+begin_src html :tangle no
+<div class="tag">QCM Bayesien &middot; </div>
+
+<h1>Évaluer sa <span>confiance</span> en ses connaissances.</h1>
+
+<p class="subtitle">
+  Ne choissez pas seulement une réponse ; exprimez <em>à quel degré</em> vous êtes confiant en votre réponse.<br>
+  Le calcul des notes récompense l'honnêteté dans l'incertitude : la meilleure stratégie est toujours de donner sincèrement la valeur de vos croyances.
+</p>
+#+end_src
+
+#+name: main
+#+begin_src html :noweb yes
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <<head>>
+</head>
+<body>
+<div class="quiz-wrap">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <header>
+    <<header>>
+  </header>
+
+  <!-- ── Progress bar + live score ──────────────────────────────────────────── -->
+  <div class="top-bar">
+    <span id="progressLabel">0 / … confirmé</span>
+    <span class="live-score-label">Score: <strong id="liveScore">— pts</strong></span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- ── Questions (filled dynamically by quiz.js) ──────────────────────────── -->
+  <div id="questionsContainer"></div>
+
+  <!-- ── Result panel ───────────────────────────────────────────────────────── -->
+  <div class="result-panel" id="resultPanel">
+    <div class="score-ring">
+      <svg viewBox="0 0 110 110" width="120" height="120">
+        <circle class="ring-bg"   cx="55" cy="55" r="46"/>
+        <circle class="ring-fill" id="ringFill" cx="55" cy="55" r="46"
+                stroke-dasharray="289"
+                stroke-dashoffset="289"/>
+      </svg>
+      <div class="score-num-wrap">
+        <span class="score-num" id="scoreNum">0</span>
+        <span class="score-max" id="scoreMax">/ 0 pts</span>
+      </div>
+    </div>
+    <div class="result-title" id="resultTitle">—</div>
+    <div class="result-sub"   id="resultSub">—</div>
+    <button class="btn-restart" onclick="restartQuiz()">↺ Réessayer</button>
+  </div>
+
+</div><!-- /.quiz-wrap -->
+
+<script src="quiz.js"></script>
+</body>
+</html>
+#+end_src
+
+* Export to JSON via Python                            :noexport:
+
+** Python V1                                   :noexport:ARCHIVE:
+
+#+begin_src python :tangle convert.py :exports none
+import re, json, sys
+
+def parse(path):
+    text = open(path).read()
+    questions = []
+    for block in re.split(r'^\* ', text, flags=re.MULTILINE)[1:]:
+        if ':noexport:' in block.splitlines()[0]:
+            continue
+        heading     = block.splitlines()[0].strip()
+        correct     = int(re.search(r':CORRECT:\s*(\d+)', block).group(1))
+        explanation = re.search(r':EXPLANATION:\s*(.+)', block).group(1).strip()
+        answers     = re.findall(r'^  - (.+)', block, re.MULTILINE)
+        questions.append({"text": heading, "answers": answers,
+                          "correct": correct, "explanation": explanation})
+    return questions
+
+data = parse(sys.argv[1] if len(sys.argv) > 1 else "quiz.org")
+print(json.dumps(data, indent=2, ensure_ascii=False))
+#+end_src
+
+
+
+** Python V2
+:PROPERTIES:
+:header-args: :tangle /tmp/QCM/convert.py
+:END:
+
+#+name: expected-org-structure
+#+begin_src org :tangle no
+ ** MCQ : <title>          <- optional, ignored
+    <any preamble text>    <- ignored
+ 
+ *** Question   :TF:
+ :PROPERTIES:
+ :CORRECT:  0              <- 0 = True, 1 = False
+ :END:
+ 
+ <question text, may span several paragraphs and contain LaTeX>
+ 
+ **** Explanation
+ <explanation text>
+ 
+ *** Question   :Mult:
+ :PROPERTIES:
+ :CORRECT:  2              <- 0-indexed position in the Answers list
+ :END:
+ 
+ <question text>
+ 
+ **** Answers
+ - <answer 0>
+ - <answer 1>
+ - <answer 2>
+ 
+ **** Explanation
+ <explanation text>
+#+end_src
+
+#+name: preamble
+#+begin_src python :noweb yes
+#!/usr/bin/env python3
+"""
+convert.py  —  Org-mode → data.json for the Bayesian Quiz
+Usage:  python convert.py quiz.org          (prints JSON to stdout)
+        python convert.py quiz.org -o data.json   (writes to file)
+
+Expected Org structure
+──────────────────────
+<<expected-org-structure>>
+"""
+
+import re
+import json
+import sys
+import argparse
+#+end_src
+
+#+name: helpers
+#+begin_src python
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+# Matches a *** Question heading with a tag (:TF: or :Mult:)
+# Handles arbitrary whitespace between the heading text and the tag.
+RE_QUESTION = re.compile(
+    r'^\*{3} Question[^\n]*:(TF|Mult):[^\n]*$',
+    re.MULTILINE
+)
+
+# Matches a **** sub-heading
+RE_SUBHEADING = re.compile(r'^\*{4}\s+\S', re.MULTILINE)
+
+def between(text, start_m, end_m=None):
+    """Return the text between end-of-match start_m and start-of-match end_m."""
+    start = start_m.end()
+    end   = end_m.start() if end_m else len(text)
+    return text[start:end].strip()
+
+
+def find_subheading(block, name):
+    """
+    Return a match for '**** <name>' inside block, or None.
+    The match captures everything after the heading line until the next ****
+    heading or end of block.
+    """
+    pattern = re.compile(
+        r'^\*{4}\s+' + re.escape(name) + r'\s*\n'   # heading line
+        r'(.*?)'                                      # content (group 1)
+        r'(?=^\*{4}|\Z)',                             # until next **** or end
+        re.MULTILINE | re.DOTALL
+    )
+    return pattern.search(block)
+#+end_src
+
+#+name: parser
+#+begin_src python
+# ── Parser ────────────────────────────────────────────────────────────────────
+
+def parse(path):
+    text = open(path, encoding='utf-8').read()
+
+    questions = []
+    q_matches = list(RE_QUESTION.finditer(text))
+
+    if not q_matches:
+        print("⚠️  No questions found. Check that headings use *** and tags :TF: or :Mult:",
+              file=sys.stderr)
+        return []
+
+    for idx, m in enumerate(q_matches):
+        tag   = m.group(1)          # 'TF' or 'Mult'
+        start = m.start()
+        end   = q_matches[idx + 1].start() if idx + 1 < len(q_matches) else len(text)
+        block = text[start:end]
+
+        # ── CORRECT index ─────────────────────────────────────────────────────
+        correct_m = re.search(r':CORRECT:\s*(\d+)', block)
+        if not correct_m:
+            print(f"⚠️  No :CORRECT: property in question {idx + 1}, defaulting to 0.",
+                  file=sys.stderr)
+        correct = int(correct_m.group(1)) if correct_m else 0
+
+        # ── Question text: between :END: and the first **** sub-heading ───────
+        end_prop_m   = re.search(r':END:', block)
+        first_sub_m  = RE_SUBHEADING.search(block)
+
+        q_start = end_prop_m.end()   if end_prop_m  else m.end()
+        q_end   = first_sub_m.start() if first_sub_m else len(block)
+
+        question_text = block[q_start:q_end].strip()
+
+        # ── Answers ───────────────────────────────────────────────────────────
+        if tag == 'TF':
+            answers = ["True", "False"]
+
+        else:   # :Mult:
+            answers_m = find_subheading(block, 'Answers')
+            if not answers_m:
+                print(f"⚠️  No **** Answers sub-heading in Mult question {idx + 1}.",
+                      file=sys.stderr)
+                answers = []
+            else:
+                # Bullet items: lines starting with optional spaces then "- "
+                answers = re.findall(r'^\s*-\s+(.+)', answers_m.group(1), re.MULTILINE)
+                answers = [a.strip() for a in answers]
+
+        # ── Explanation ───────────────────────────────────────────────────────
+        expl_m = find_subheading(block, 'Explanation')
+        explanation = expl_m.group(1).strip() if expl_m else ''
+
+        questions.append({
+            "text":        question_text,
+            "answers":     answers,
+            "correct":     correct,
+            "explanation": explanation,
+        })
+
+    return questions
+#+end_src
+
+#+name: CLI
+#+begin_src python
+# ── CLI ───────────────────────────────────────────────────────────────────────
+
+def main():
+    ap = argparse.ArgumentParser(description='Convert Org-mode quiz to JSON')
+    ap.add_argument('org_file',       help='Input .org file')
+    ap.add_argument('-o', '--output', help='Output JSON file (default: stdout)')
+    args = ap.parse_args()
+
+    data = parse(args.org_file)
+    out  = json.dumps(data, indent=2, ensure_ascii=False)
+
+    if args.output:
+        with open(args.output, 'w', encoding='utf-8') as f:
+            f.write(out)
+        print(f"✓ Exported {len(data)} question(s) to {args.output}", file=sys.stderr)
+    else:
+        print(out)
+
+
+if __name__ == '__main__':
+    main()
+#+end_src
+
+
+** Export command
+
+#+begin_src sh
+python3 convert.py quiz.org -o data.json && echo "✓ done"
+#+end_src
+
+#+RESULTS:
+: ✓ done
+
+
+* Start server
+
+#+begin_src sh
+python3 -m http.server
+#+end_src
+
+* TODO TAF [0/7]
+
+- [ ] Faire un dépot Git à part
+- [ ] Gérer plusieurs QCM et le choix du thème
+  -> poser la question à Claude.
+- [?] Ajout de tags ?
+- [ ] Convertir les anciens QCM
+  - [ ] Ajouter des explications 
+- [ ] créer d'autres QCM
+- [ ] Vérifier si c'est ok sur portable
+- [ ] Créer une page d'explication
+- [ ] Mettre sur le site de la TSI1
+
+* QCM par thèmes
+
+** MCQ : example
+
+Let $I \subseteq \R$ be a non-empty open interval.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Is $\left(\sum_{k} \frac 1 k\right)_k$ convergent ?
+
+**** Explanation
+
+No : forall all $n \in \N$, we have $\sum_{k = 2^n}^{2^{n + 1} - 1} \frac 1 k > \sum_{k = 2^n}^{2^{n + 1} - 1} \frac 1 {2^{n + 1}} = \frac 1 2$. Therefore $\sum_{k = 1}^{2^{n + 1}} \frac 1 k > \frac n 2$ and thus diverges to $+\infty$ as $n \to +\infty$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+Is $\left(\sum_{k} \frac {(-1)^k} k\right)_k$ convergent ?
+
+**** Explanation
+
+Yes : it satisfies the criterium for alternated series.
+
+*** Question                                               :Mult:
+:PROPERTIES:
+:CORRECT:  3
+:END:
+
+What is the value of $\cos\left(\frac \pi 8\right)$
+
+**** Answers
+
+- $\frac {\sqrt 2} 4$
+- $\frac {\sqrt 8} 4$
+- $\frac {\sqrt{2 - \sqrt 2 }} 2$
+- $\frac {\sqrt{2 + \sqrt 2}} 2$
+
+**** Explanation
+
+$\frac {\sqrt 2} 2 = \cos\left(\frac \pi 4\right) = \cos\left(2 \times \frac \pi 8\right) = 2\cos^2\left(\frac \pi 8\right) - 1$
+Therefore $\cos^2\left(\frac \pi 8\right) = \frac 1 2\left(\frac {\sqrt 2} 2 + 1\right) = \frac {2 + \sqrt 2} 4$.
+
+Since $\frac \pi 8 \in \left(0, \frac \pi 2\right)$, one has $\cos\left(\frac \pi 8\right) > 0$ and thus $\cos\left(\frac \pi 8\right) = \sqrt{\cos^2\left(\frac \pi 8\right)} = \frac {\sqrt{2 + \sqrt 2}} 2$.

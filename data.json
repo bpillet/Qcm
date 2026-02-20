@@ -1,0 +1,31 @@
+[
+  {
+    "text": "Is $\\left(\\sum_{k} \\frac 1 k\\right)_k$ convergent ?",
+    "answers": [
+      "True",
+      "False"
+    ],
+    "correct": 1,
+    "explanation": "No : forall all $n \\in \\N$, we have $\\sum_{k = 2^n}^{2^{n + 1} - 1} \\frac 1 k > \\sum_{k = 2^n}^{2^{n + 1} - 1} \\frac 1 {2^{n + 1}} = \\frac 1 2$. Therefore $\\sum_{k = 1}^{2^{n + 1}} \\frac 1 k > \\frac n 2$ and thus diverges to $+\\infty$ as $n \\to +\\infty$."
+  },
+  {
+    "text": "Is $\\left(\\sum_{k} \\frac {(-1)^k} k\\right)_k$ convergent ?",
+    "answers": [
+      "True",
+      "False"
+    ],
+    "correct": 0,
+    "explanation": "Yes : it satisfies the criterium for alternated series."
+  },
+  {
+    "text": "What is the value of $\\cos\\left(\\frac \\pi 8\\right)$",
+    "answers": [
+      "$\\frac {\\sqrt 2} 4$",
+      "$\\frac {\\sqrt 8} 4$",
+      "$\\frac {\\sqrt{2 - \\sqrt 2 }} 2$",
+      "$\\frac {\\sqrt{2 + \\sqrt 2}} 2$"
+    ],
+    "correct": 3,
+    "explanation": "$\\frac {\\sqrt 2} 2 = \\cos\\left(\\frac \\pi 4\\right) = \\cos\\left(2 \\times \\frac \\pi 8\\right) = 2\\cos^2\\left(\\frac \\pi 8\\right) - 1$\nTherefore $\\cos^2\\left(\\frac \\pi 8\\right) = \\frac 1 2\\left(\\frac {\\sqrt 2} 2 + 1\\right) = \\frac {2 + \\sqrt 2} 4$.\n\nSince $\\frac \\pi 8 \\in \\left(0, \\frac \\pi 2\\right)$, one has $\\cos\\left(\\frac \\pi 8\\right) > 0$ and thus $\\cos\\left(\\frac \\pi 8\\right) = \\sqrt{\\cos^2\\left(\\frac \\pi 8\\right)} = \\frac {\\sqrt{2 + \\sqrt 2}} 2$."
+  }
+]
