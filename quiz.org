@@ -525,6 +525,8 @@ function typesetIfReady(selector) {
 :header-args: :tangle index.html
 :END:
 
+(debug-on-entry 'org-babel-tangle)
+
 
 ** Latex Macros
 Issue de help:org-roam-ui-latex-macros :
@@ -676,7 +678,7 @@ tex: {
 #+begin_src html :tangle no
 <div class="tag">QCM Bayesien &middot; </div>
 
-<h1>Évaluer sa <span>confiance</span> en ses connaissances.</h1>
+<h1>Évaluer sa <span>confiance</span> en ses connaissances. </h1>
 
 <p class="subtitle">
   Ne choissez pas seulement une réponse ; exprimez <em>à quel degré</em> vous êtes confiant en votre réponse.<br>
@@ -755,6 +757,7 @@ tex: {
 </html>
 #+end_src
 
+
 * CSS                                                  :noexport:
 
 file:style.css
@@ -763,7 +766,7 @@ file:style.css
 
 ** Python V1                                   :noexport:ARCHIVE:
 
-#+begin_src python :tangle convert.py :exports none
+#+begin_src python :tangle no :exports none
 import re, json, sys
 
 def parse(path):
@@ -791,39 +794,8 @@ print(json.dumps(data, indent=2, ensure_ascii=False))
 :header-args: :tangle convert.py
 :END:
 
-#+name: expected-org-structure
-#+begin_src org :tangle no
- ** <title>         <- topic title (** heading)
+file:convert.py
 
-   <any preamble text>    <- ignored
-
- *** Question   :TF:
- :PROPERTIES:
- :CORRECT:  0              <- 0 = True  1 = False
- :END:
-
-<question text  may span several paragraphs and contain LaTeX>
-
- **** Explanation
-<explanation text>
-
- *** Question   :Mult:
- :PROPERTIES:
- :CORRECT:  2              <- 0-indexed position in the Answers list
- :END:
-
-<question text>
-
- **** Answers
-- <answer 0>
-- <answer 1>
-- <answer 2>
-
- **** Explanation
-<explanation text>
- ** Another Topic                   <- next topic
-...
-#+end_src
 
 #+name: preamble
 #+begin_src python :noweb yes
@@ -838,6 +810,7 @@ Expected Org structure
 <<expected-org-structure>>
 """
 
+
 import re
 import json
 import sys
@@ -850,7 +823,7 @@ import argparse
 
 
 # A ** topic heading (exactly two stars)
-RE_TOPIC = re.compile(r'^\*{2} (.+)$', re.MULTILINE)
+RE_TOPIC = re.compile(r'^\*{2} ([^\n]+):Cuise:[^\n]*$', re.MULTILINE)
 
 # Matches a *** Question heading with a tag (:TF: or :Mult:)
 # Handles arbitrary whitespace between the heading text and the tag.
@@ -877,6 +850,7 @@ def find_subheading(block, name):
     )
     m = pattern.search(block)
     return m.group(1).strip() if m else None
+
 #+end_src
 
 #+name: parser
@@ -1019,7 +993,6 @@ python3 convert.py quiz.org -o data.json && echo "✓ done"
 #+RESULTS:
 : ✓ done
 
-
 * Start server                                         :noexport:
 
 #+begin_src sh
@@ -1028,7 +1001,7 @@ python3 -m http.server
 
 #+RESULTS:
 
-* TODO TAF [3/9]                                       :noexport:
+* TODO TAF [3/10]                                      :noexport:
 
 - [X] Faire un dépot Git à part
 - [X] Gérer plusieurs QCM et le choix du thème
@@ -1036,10 +1009,12 @@ python3 -m http.server
   - [X] Intégrer sa réponse (4 fichiers à modifier)
 - [?] Ajout de tags ?
 - [X] Intégrer mes macro LaTeX perso
-- [ ] Améliorer le HTML
-  - nav
-  - [ ] article
+- [-] Améliorer le HTML
+  - [ ] h2  au lieu de =<span id = 'quiz topic title'>=
+  - [ ] nav
+  - [X] article
   - [ ] sections
+- [-] Modifier l'export en json pour ne prendre en compte que les header taggués =:Cuise:=
 - [ ] Améliorer le CSS
   - choix des topics
 - [ ] Convertir les anciens QCM
@@ -1101,7 +1076,7 @@ Therefore $\cos^2\left(\frac \pi 8\right) = \frac 1 2\left(\frac {\sqrt 2} 2 + 1
 
 Since $\frac \pi 8 \in \left(0, \frac \pi 2\right)$, one has $\cos\left(\frac \pi 8\right) > 0$ and thus $\cos\left(\frac \pi 8\right) = \sqrt{\cos^2\left(\frac \pi 8\right)} = \frac {\sqrt{2 + \sqrt 2}} 2$.
 
-** Fonctions
+** Fonctions                                              :Cuise:
 
 *** Question                                                 :TF:
 :PROPERTIES:
@@ -1124,7 +1099,7 @@ $\arctan$ est définie sur $\Ioo {-\frac \pi 2} {\frac \pi 2}$.
 
 $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
-** Divers
+** Primitives                                             :Cuise:
 
 *** Question      :TF:
 :PROPERTIES:
@@ -1133,12 +1108,16 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
  $x \mapsto \int_2^x \dfrac {\dd t}{\ln(t)}$ est une primitive de $\frac 1 {\ln}$ sur $\Ioo 2 {+\infty}$.
 
+
+** EDL                                                    :Cuise:
 *** Question      :TF:
 :PROPERTIES:
 :CORRECT: 1
 :END:
 
- Le groupe des racines \(n\)-èmes de l'unité est $\ens{z \in \C}{ \vert z \vert = 1}$.
+ Les solutions homogènes sont toujours solutions de l'équation différentielle avec second membre.
+
+
 
 *** Question      :TF:
 :PROPERTIES:
@@ -1147,6 +1126,22 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
  Le problème de Cauchy $y'(x) + \sin(x)y(x) = e^x$ et $y(0) = -1$ n'a aucune solution sur $\R$.
 
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $t \mapsto e^{-at}$ est solution de $y'(t) + a(t)y(t) = 0$.
+
+ 
+** Complexes                                              :Cuise:
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ Le groupe des racines \(n\)-èmes de l'unité est $\ens{z \in \C}{ \vert z \vert = 1}$.
 *** Question      :TF:
 :PROPERTIES:
 :CORRECT: 1
@@ -1168,12 +1163,9 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
  Une équation du second degré sur $\C$ possède toujours 1 ou 2 solutions.
 
-*** Question      :TF:
-:PROPERTIES:
-:CORRECT: 1
-:END:
+** Divers                                                 :Cuise:
 
- $t \mapsto e^{-at}$ est solution de $y'(t) + a(t)y(t) = 0$.
+
 
 *** Question      :TF:
 :PROPERTIES:
@@ -1189,16 +1181,10 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
  $\binom {n} {k + 1} + \binom {n} k  = \binom {n + 1} {k + 1}$
 
-*** Question      :TF:
-:PROPERTIES:
-:CORRECT: 1
-:END:
-
- Les solutions homogènes sont toujours solutions de l'équation différentielle avec second membre.
 
 
  
-** Géométrie 3D
+** Géométrie 3D                                           :Cuise:
 
 
 
@@ -1272,3 +1258,1067 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 :END:
 
  $\ov k \wedge \jv = -\iv$
+
+
+
+
+
+** QCM 10                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm10
+:END: 
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\displaystyle (\cos(u))' = -\sin(u)$.
+- 1 $\displaystyle (\sin(u))' = \cos(u)u'$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\displaystyle (\ln(u))' = \frac {\ln(u)}{u'}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\displaystyle \left(e^u\right)' = e^{u'}$.
+- 1 $\displaystyle (\tan(u))' = \left(1 + \tan(u)\times \tan(u)\right) \times u'$.
+- 1 $\displaystyle \lim_{\underset{x \neq \pi}x \to \pi} \dfrac {\cos(x) - \cos(\pi)}{x - \pi} = 0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\displaystyle \left(\sqrt u\right)' = \dfrac {2u'} {\sqrt u}$.
+- 1 $\displaystyle x \mapsto \sqrt x$ n'est pas dérivable en $0$.
+- 1 $\dfrac {\dd \left(\frac 1 x\right)}{\dd x} = -\dfrac 1 {x^2}$
+- 1 $(u^n)' = nu^{n - 1}u'$
+
+
+
+** QCM 11                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm11
+:END: 
+
+- 1 $\arcsin$ est définie sur $\Iff {-1} 1$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\arctan$ est définie sur $\Ioo {-\frac \pi 2} {\frac \pi 2}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\arccos'(x) = -\dfrac 1 {1 - x^2}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\arccos$ est croissante sur $\Iff {-1} 1$.
+- 1 $\arctan'(x) = \dfrac 1 {1 + x^2}$.
+- 1 la tangente au graphe de $f$ en $x_0$ a pour équation $y = f'(x_0)(x - x_0) + f(x_0)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f$ est paire alors $f(0) = 0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\tan$ est paire.
+- 1 Une fonction strictement croissante est injective.
+- 1 $\sum_{k = 0}^n k = \dfrac {n(n+1)}2$.
+
+
+** QCM 12                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm12
+:END: 
+
+- 1 Si $z = x + iy$ avec $x,y \in \R$ et $x > 0$, alors $\Aarg(z) = \arctan(y/x)$.
+- 1 $\vert z - z_A \vert$ est la distance entre les points d'affixe $z$ et $z_A$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Aarg(z + w) \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
+- 1 $\vert zw \vert = \vert z \vert \times \vert w \vert$.
+- 1 $2\cos(t) = e^{it} + e^{-it}$.
+- 1 $2i\Im(z) = z - \bar z$.
+- 1 $\Im(z)$ est un nombre réel.
+- 1 $x \mapsto x\ln(x) - x$ est une primitive de $\ln$ sur $\R^{+*}$.
+- 1 La proposition $\Pp$ est /héréditaire/ si $\forall n \in \N, \Pp(n) \Rightarrow \Pp(n+1)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Une fonction dont la dérivée est nulle sur $\R^*$ est forcément constante.
+
+
+** QCM 14                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm14
+:END: 
+
+:tags:
+Géométrie 3D
+:end:
+
+- 1 $\ov u$ a pour coordonnées $(\alpha, \beta, \gamma)$ \ssi $\ov u = \alpha \iv + \beta \jv + \gamma \ov k$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\det\left(\ov u, \ov v, \ov w\right) = 0 \; \Leftrightarrow \; \ov u, \ov v, \ov w$ sont colinéaires.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\ov u \wedge \ov v = \ov 0$ si et seulement si l'un des deux est le vecteur nul.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Au cours de la résolution d'un système, un /pivot/ est une opération faisant apparaître un zéro.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Les racines $7$ èmes de l'unité sont les $e^{i \frac {k\pi} 7}$ pour $k$ variant de $0$ à $6$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Un système $3 \times 3$ a toujours : $0$, $3$ ou une infinité de solutions.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\det\left(\ov u, \ov v, \ov w\right) = \left(\ov u \wedge \ov w\right) \cdot \ov v$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\ov u \wedge \ov v = \Nld{\ov u}\Nld{\ov v} \left\vert \sin\left(\widehat{\ov u,\ov v}\right)\right\vert$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\det\left(\ov {u}, \ov {v}, \ov {w}\right) = 1$ si et seulement si $\left(\ov u, \ov v, \ov w\right)$ est une base est orthonormée directe.
+- 1 $\ov k \wedge \jv = -\iv$
+
+
+
+** QCM 15                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm15
+:END: 
+
+:tags:
+Géométrie 3D
+Système
+Dénombrement
+:end:
+
+Soit $E$ un ensemble à $n$ éléments
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Le nombre de parties de $E$ est $n^2$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Le cardinal d'une partie à $p$ éléments de $E$ est $\binom n p$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+L'ensemble des \(p\)-liste d'éléments distincts de $E$ est $\frac {n!} {(n - p)!}$.
+- 1 Il y a $n!$ façons d'ordonner les éléments de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Un \(p\)-uplet est un ensemble à $p$ éléments.
+- 1 Le projeté orthogonal d'un point de l'espace sur une droite existe toujours.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Une droite dans l'espace a une équation de la forme $ax + by + cz = d$.
+- 1 Les variables qui n'ont pas de pivot s'appellent /variables auxiliaires/.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+On ne peut pas avoir de ligne de $0$ sous forme échelonnée.
+
+
+** QCM 16                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm16
+:END: 
+
+:tags:
+EDL
+:end:
+
+Soit $(E) : ay'' + by' + cy = f$ une équation différentielle linéaire à coefficients constants réels, ($H$) l'équation homogène associée et $(EC)$ l'équation caractéristique associée, $\Delta$ son discriminant.
+
+- 1 $\Sol(E) = \ensp{y_p + h}{h \in \Sol(H)$} où $y_p$ est solution particulière.
+- 1 $(EC)$ est une équation polynomiale de degré 2.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+($H$) a exactement $2$ solutions à valeurs dans $\C$.
+- 1 Si $\Delta = 0$, alors $t \mapsto e^{\lambda_0 t}$ et $t \mapsto te^{\lambda_0 t}$ sont solution de ($H$) pour un certain $\lambda_0 \in \R$.
+- 1 Si $\Delta < 0$, alors les solutions non-nulles de ($H$) changent de signe sur $\R$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f(t) = e^t$ alors il y a une solution particulière de la forme $t \mapsto Ke^t$ avec $K \in \R$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f(t) = \cos(t)$ alors il y a une solution particulière de la forme $t \mapsto A\cos(t)$ avec $A \in \R$.
+- 1 Si $f(t) = \sin(2t)$ et $2i$ est solution de ($EC$) alors on cherchera une solution particulière de la forme $t \mapsto At\cos(2t) + Bt\sin(2t)$ avec $A,B \in \R$.
+- 1 $(1 - i)^2 = -2i$.
+- 1 Si $a,b$ ou $c$ est nul, alors il y a une manière élémentaire de trouver les solutions de ($EC$).
+
+
+** QCM 17                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm17
+:END: 
+
+Soient $\beta,\gamma \in \R$,
+\[
+\tag{\star}\label{eq} \forall n \in \N, u_{n + 2} = \beta u_{n + 1} + \gamma u_n.
+\]
+et $P(X) = 0$ son équation caractéristique.
+# , $\Delta$ son discriminant.
+
+- 1 $\Mm_{n,p}(\K)$ est l'ensemble des matrices à $p$ colonnes et $n$ lignes.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Une suite géométrique tend toujours vers $\pm \infty$.
+- 1 Si $(u_n)_n$ est arithmétique de raison $a$, alors $\forall n \in \N, u_n = u_0 + an$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+La borne supérieure de $A$ est un élément de $A$.
+- 1 Le minimum de $A$ est un minorant qui est un élément de $A$.
+- 1 Si $\left(u_n\right)_n$ est arithmético-géométrique et $\ell$ est son point fixe alors $\left(u_n - \ell\right)_n$ est géométrique.
+- 1 Les changements d'indices de sommes sont forcément de la forme $k' = k + n_0$ ou $k' = n_0 - k$ pour $n_0 \in \Z$.
+- 1 $P(X) = X^2 - \beta X - \gamma$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $P(\lambda) = 0$, alors $\left(\lambda^n\right)_n$ et $\left(n\lambda^n\right)_n$ sont solution de \eqref{eq}.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$(u_n)_n$ est positive /à partir d'un certain rang/ si $\forall n \in \N, \exists m \geq n, u_{m} \geq 0$.
+
+
+** QCM 18                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm18
+:END:
+
+Soit $(u_n)_n$ une suite convergeant vers $\ell \in \R$.
+Soit $A \in \Mm_{n,p}(\R)$, $B \in \Mm_{q,r}(\R)$ et $M,N \in \Mm_n(\R)$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+: À partir d'un certain rang, toutes les suites convergent.
+- 1 : Une matrice inversible est toujours carrée.
+- 1 : $AB$ existe si et seulement si $q = p$.
+- 1 : $\forall \varepsilon > 0, \exists n_0 \in \N, \forall n \geq n_0, \ell - \varepsilon \leq u_n \leq l + \varepsilon$.
+- 1 : Une suite bornée à partir d'un certain rang est bornée.
+- 1 : L'inverse d'une matrice inversible est inversible.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+: $\left(M + N\right)^n = \sum_{k = 0}^n \binom n k M^k N^{n - k}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+: Une suite /croissante à partir d'un certain rang/ est croissante.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+: $A + B$ existe si et seulement si $n = q$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+: Si $p = n$ alors $AM = MA$.
+
+** QCM 19                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm19
+:END:
+
+Soit $(u_n)_n$ une suite réelle.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $u_n \to +\infty$, alors $\cos(u_n) \sim u_n$.
+- 1 Si $u_n \to 0$, alors $\sin(u_n) \sim u_n$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\ln(1/n) \sim \frac 1 n$.
+- 1 $n^3 = \po{}\left(e^n\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Un /évènement/ est un élément de l'/univers/ $\Omega$ décrivant une /expérience aléatoire/.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\tan(u_n) \sim 1 + \tan^2(u_n)$.
+- 1 Si $u_n \to 0$, alors $\ln(1 + u_n) \sim u_n$.
+- 1 $\arccos$ est définie sur $\Iff {-1} 1$.
+- 1 $n = \gO(n)$.
+- 1 $\arctan\left(n^3\right) \sim \frac \pi 2$.
+
+
+** QCM 20                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm20
+:END:
+
+Soit $(\Omega,\Pro)$ un espace probabilisé.
+Soient $A,B$ deux évènements de probabilités non-nulles. Soit $(E_1,\cdots, E_n)$ un système complet d'évènements avec $\forall i, \Pro(E_i) \neq 0$.
+Soit $\Tt = (u_1,\cdots, u_p)$ une famille de vecteurs de $\R^n$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Pro(A) = \dfrac {\Card(A)}{\Card(\Omega)}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Pro(A \cup B) = \Pro(A) + \Pro(B)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Tt$ est libre si et seulement si $0 \ov {u_1} + 0\ov{u_2} + \cdots  + 0\ov{u_p} = \ov 0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $n = p$ alors $\Tt$ est libre.
+- 1 $\Tt$ est génératrice de $\R^n$ si et seulement si $\forall v \in \R^n, \exists \alpha_1, \cdots, \alpha_p \in \R, v = \displaystyle\sum_{i = 1}^p \alpha_i u_i$.
+- 1 $\Pro(A\cap B) = \Pro_A(B)\Pro(A)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Pro(A) = \displaystyle\sum_{k = 1}^n \Pro_{E_i}(A)$.
+- 1 $\Pro_A(B) = \dfrac {\Pro(B)\Pro_B(A)}{\Pro(B)\Pro_B(A) + \Pro(\bar B)\Pro_{\bar B}(A)}$.
+- 1 $\left(A, \bar A\right)$ est un système complet d'évènements.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Pro : \Omega \to \Iff 0 1$.
+
+
+** QCM 21                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm21
+:END:
+Soit $A \in \Mm_{n,p}(\R)$. On note $C_1, C_2 \cdots C_p$ les colonnes de $A$ et $\Tt = (C_1,C_2,\cdots, C_p)$. Soit $f$ une fonction de $\R$ dans $\R$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Ker(A) = \ens{X \in \Mm_{n,1}(\R)}{AX = \ov 0_p}$.
+- 1 $\Vect(\Tt)$ est l'ensemble des combinaisons linéaires des vecteurs de $\Tt$.
+- 1 $\Tau \in \left(\Mm_{n,1}(\R)\right)^p$
+- 1 $\Image(A) = \ensp{AX}{X \in \Mm_{p,1}(\R)}$.
+- 1 $AX$ est une combinaison linéaire des vecteurs colonnes de $A$.
+- 1 $AX = Y$ encode un système linéaire à $n$ équations et $p$ inconnues.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$f$ est injective si et seulement si $\Mat(f)$ est inversible.
+- 1 $AX = \ov 0_n$ possède une unique solution si et seulement si $\Tt$ est libre.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f(0) < 0$ et $f(1) > 0$ alors il existe $c \in \Ioo 0 1$ tel que $f(c) = 0$.
+- 1 Si $f$ est monotone sur $\R$, alors elle admet une limite en $-\infty$.
+
+
+** QCM 22                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm22
+:END:
+
+Soit $u : \R \to \R$ une fonction telle que $\lim_{x \to 1} u(x) = 0$ et $\lim_{x \to +\infty} u(x) = 1$. Soit $\alpha \in \R$. Soient $A$ et $B$ deux évènements d'un espace probabilisé $(\Omega,\Pro)$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\sin(u(x)) \simeq x$ quand $x \to 0$.
+- 1 $(u(x))^\alpha = 1 + \alpha (u(x) - 1) + \po{}(u(x) - 1)$ quand $x \to +\infty$.
+- 1 $e^{\frac 1 x} \simeq u(x)$ quand $x \to + \infty$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Pro(A \cap B) = \Pro(A) \Pro(B)$.
+- 1 $\arctan(u(x)) \simeq u(x)$ quand $x \to 1$.
+- 1 $\ln(u(x)) \simeq u(x) - 1$ quand $x \to +\infty$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\cos(u(x)) = 1 + \demi u(x)^2 + \po{}\left(u(x)\right)$ quand $x \to 1$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\left(x - 1\right)^{u(x)} \to 1$  quand $x \to 1$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\sqrt{1 + u(x)} = \demi u(x) + \po{}\left(u(x)\right)$ quand $x \to 1$.
+- 1 La formule des probabilités totales donne : $\Pro(A) = \Pro(B)\Pro_B(A)+\Pro\left(\bar B\right)\Pro_{\bar B}(A)$.
+
+
+
+** QCM 23                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm23
+:END:
+
+Soit $P \in \R[X]$ et $f : \R \to \R$ continue avec $a,b \in \R, a < b$. Soit $u,v : \R \to \R$ dérivables $n$ fois.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Un polynôme de degré $n$ a toujours $n$ racines distinctes.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$(X-\alpha)^k$ divise $P$ signifie que $\alpha$ est racine de multiplicité $k$ de $P$.
+- 1 Tous les polynômes non-constants sont scindés sur $\C$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\tilde{P}'(\alpha) = 0$ signifie que $\alpha$ est racine double de $P$.
+- 1 Toutes les fonctions dérivables en $0$ admettent un développement limité d'ordre $1$ en $0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f$ est continue en $a$ alors elle est dérivable en $a$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f(b) = f(a)$ alors $\exists c \in \Ioo a b, f'(c) = 0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\displaystyle (uv)^{(n)} = \sum_{k = 0}^n \binom n k u^{(k)}v^{(n)}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$x \mapsto x^\alpha$ est dérivable en $0$ \ssi $\alpha < 1$.
+- 1 Si $f(x) = f(1) + \ell (x - 1) + \po{x\to 1}(x - 1)$ alors $f$ est dérivable en $1$.
+
+
+** QCM 24                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm24
+:END:
+
+Soit $f$ de classe $\Cc^2$ sur un voisinage de $a \in \R$.
+
+- 1 $\sin(x) = x - \frac 1 6 x^3 + \frac 1 {120} x^5 + \po{x\to 0}\left(x^5\right)$.
+- 1 $\exp(x) = 1 + x + \demi x^2 + \frac 1 6 x^3 + \frac 1 {24} x^4 + \po{x \to 0}\left(x^4\right)$.
+- 1 $\ln(1 - x) = -x - \demi x^2 - \frac 1 3 x^3 - \frac 1 4 x^4 + \po{x \to 0}\left(x^4\right)$.
+- 1 $\sqrt{1 + x} = 1 + \demi x - \frac 1 8 x^2 + \frac 1 {16} x^3 + \po{x \to 0}\left(x^3\right)$.
+- 1 $\frac 1 {1 - x} = 1 + x + x^2 + x^3 + x^4 + x^5 + \po{x \to 0}\left(x^5\right)$.
+- X $\ln(1 + x) = \displaystyle\sum_{k = 0}^n (-1)^{n + 1}\frac {x^k} {k} + \po{x \to 0}\left(x^n\right)$.
+- 1 $f(x) = f(a) + f'(a)(x-a) + \demi f''(a)(x-a)^2 + \frac 1 6 f^{(3)}(a) (x - a)^3 + \po{x \to a}((x - a)^3)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$(1 + x)^{\alpha} = 1 + \alpha x + \frac {\alpha^2} 2 x^2 + \frac {\alpha^3} {6} x^3 + \po{x \to 0}\left(x^\alpha\right)$.
+- 1 $\cos(x) = \displaystyle\sum_{k = 0}^n (-1)^k \dfrac {x^{2k}}{(2k)!} + \po{x\to 0}\left(x^{2n}\right)$
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\arctan(x) = 1 - x + \frac {x^3} {3!} - \frac {x^5} {5!} + \po{x \to 0}(x^5)$.
+
+** QCM 25                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm25
+:END:
+
+Soit $E$ un \(\K\)-espace vectoriel et $F,G$ deux sous-espaces vectoriels de $E$. Soit $A \in \Mm_{n,p}(\K)$.
+
+- 1 $F \cap G$ est un sous-espace vectoriel de $E$.
+- 1 $0_F \in E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$F$ est stable par composition.
+- 1 $\ln(1 - x) = - x - \demi x^2 - \frac 1 3 x^3 - \frac 1 4 x^4 + \po{x\to 0}\left(x^4\right)$.
+- 1 Si $u,v \in F$, alors $\Vect(u,v)$ est un sous-espace vectoriel de $F$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\sqrt{1 + x} = 1 - \demi x + \frac 1 8 x^2 + \po{x \to 0}\left(x^2\right)$.
+- 1 $\forall u,v \in G, \forall \lambda, \mu \in \K, \lambda u + \mu v \in G$.
+- 1 L'ensemble des solutions d'une équation différentielle linéaire homogène est un espace vectoriel.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\ker(A)$ est un sous-espace vectoriel de $\Mm_{n,1}\left(\K\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\sin(x) = x + \frac 1 3 x^3 - \frac 1 {120} x^5 + \po{x \to 0}\left(x^5\right)$.
+
+
+** QCM 26                                         :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm26
+:END:
+
+Soit $E$ un espace vectoriel sur $\K$ et $\Bb = (e_1,e_2,\cdots e_d)$ une base de $E$. Soient $P \in \K[X]$ un polynôme et $\lambda \in \K$.
+
+- 1 $((X - 1)^2, 3, (X + 2))$ est une famille libre de $\R_2[X]$.
+- 1 $\forall x \in E, \exists ! (\alpha_1,\alpha_2,\cdots \alpha_d) \in \K^d$ tel que $x = \sum_{i = 1}^d \alpha_i e_i$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\lambda$ est racine de $P$ si et seulement si $\lambda$ divise $P$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$D_{\tan} = \ensp{k\frac \pi 2}{k \in \Z}$.
+- 1 $f(x) = -x^2 + \po_{x \to 0}(x^2)$ entraîne que $f$ a un maximum local en $0$.
+- 1 $\Vect(\Bb) = E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f(x) = x^{-1} + \po{x \to + \infty}\left(x^{-2}\right)$ alors $f$ a une asymptote verticale en $+ \infty$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f(x) = \lambda x + \po{x \to 0}\left(x\right)$ alors $f(x) \underset{x \to 0}\sim \lambda x$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\tan(x) = x - \frac {x^3} 3 + \po{x \to 0}\left(x^3\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\left((1,0),(0,1)\right)$ est une base de l'espace.
+
+** QCM 27                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm27
+:END:
+
+Soit $f : \Iff 0 1 \to \R$ continue. $h,g$ deux fonctions de classe $\Cc^1$ sur $\Iff a b$. $E$ un espace vectoriel de dimension finie.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Une famille est soit libre soit génératrice de $E$ mais jamais les deux.
+- 1 Toutes les bases de $E$ ont le même nombre d'éléments.
+- 1 $\displaystyle \frac 1 n \sum_{k = 0}^{n - 1} f\left(\frac k n\right) \underset{n \to +\infty}\longrightarrow \int_0^1 f(t) \dd t$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $f'(x) = 1 - \frac {x^2} 2 + \po{x \to 0}\left(x^2\right)$ alors $f(x) = x - \frac {x^3} 6 + \po{x \to 0}\left(x^3\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\displaystyle \int_a^b h'(t)g(t)\dd t = h(a)g(a) - h(b)g(b) + \int_a^b h(t)g'(t)\dd t$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si $g$ est de classe $C^2$ sur $\Iff a b$, $\displaystyle g(b) = g(a) + g'(a)(b - a) + \int_a^b \dfrac {(b - a)^2} {2!} g^{'}(t)\dd t$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+La valeur moyenne du cosinus sur $\Iff 0 \pi$ est $\demi$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Une primitive de $x \mapsto xe^{-x}$ est $x \mapsto \frac {x^2} 2 e^{-x}$.
+- 1 Il existe une famille finie $\Ll$ tel que $E = \Vect(\Ll)$.
+- 1 Si $I(x) = \int_0^x f(t)\dd t$ alors $I$ est dérivable sur $\Iff 0 1$ et $I' = f$.
+
+** VERIFY QCM 28                                          :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm28
+:END:
+
+Soit $E$ un espace vectoriel de dimension $7$. Soit $f$ de classe $\Cc^0$ sur $\Iff {u(a)} {u(b)}$ et $u$ de classe $\Cc^1$ et croissante sur $\Iff a b$. Soit $n \in \N$ un entier.
+
+- 1 Il est possible d'avoir une famille génératrice de $E$ de $9$ éléments.
+- 1 Il est possible d'avoir une famille libre de $E$ de $2$ éléments.
+- 1 Si une famille de $E$ possède $8$ éléments, alors elle est liée.
+- 1 Le rang d'une matrice à $n$ lignes est la dimension du sous-espace de $\Mm_{n,1}(\K)$ engendré par ses colonnes.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si une famille de $E$ possède $8$ éléments, alors elle est génératrice de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si une famille de $E$ possède $8$ éléments, alors c'est une base de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Le rang d'une famille c'est son nombre de vecteurs.
+- 1 $\displaystyle\int_a^b f(u(t))u'(t)\dd t = \int_{u(a)}^{u(b)}f(s)\dd s$.
+- 1 Il y a des matrices de $\Mm_n(\R)$ qui ne sont pas inversibles.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Un système complet d'évènements ça dépend de la probabilité sur $\Omega$.
+
+** QCM 29                                                 :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm29
+:END:
+
+
+Soit $f: E \to F$ linéaire. Soient $u,v \in E$
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$f(0_E) = 0_F$ si et seulement si $F$ est un sous-espace vectoriel de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+L'image d'un base de $E$ par $f$ est une base de $\image(f)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$f(u) = 0_F \Rightarrow u = \ker(f)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\image(f)$ est engendré par les colonnes de $f$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$f$ est un isomorphisme si et seulement si $E = F$.
+- 1 $f(u + v) = f(u) + f(v)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\image(f)$ est un sous-espace vectoriel de $E$.
+- 1 Un automorphisme est un endomorphisme bijectif.
+- 1 $\ker(f)$ est un sous-espace vectoriel de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$x \mapsto x^2$ est linéaire de $\R$ vers $\R$.
+
+
+** VERIFY QCM 30                                          :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm30
+:END:
+
+
+Soit $\left(\Omega,\Pro\right)$ un espace probabilisé d'une expérience aléatoire. Et $X$ une variable aléatoire réelle sur cet espace.
+Soient $f,g : E \to F$ linéaire entre deux espaces vectoriels de dimension finies sur $\K$. Soit $\Bb_E = (e_1,\cdots,e_n)$ une base de $E$ et $\Bb_F$ une base de $F$
+
+- 1 L'ensemble des $\omega \in \Omega$ tels que $X(\omega) = 2$ est un évènement de l'expérience.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+L'ensemble des valeurs prises par $X$ est un évènement de l'expérience.
+- 1 La matrice d'un endomorphisme entre deux bases est toujours carrée quels que soient les bases choisies.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+La matrice de $f$ entre $\Bb_E$ et $\Bb_F$ a $\dim(F)$ colonnes.
+- 1 L'image de $\Bb_E$ par $f$ est génératrice de $\Im(f)$.
+- 1 $\Mat_{\Bb_E,\Bb_F}(f + g) = \Mat_{\Bb_E,\Bb_F}(f) + \Mat_{\Bb_E,\Bb_F}(g)$.
+- 1 L'ensemble des $\ensva{X = x}$ pour $x \in X(\Omega)$ forme un système complet d'évènements.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+L'ensemble $\Omega = \{(P,P,F,F)\}$ modélise l'expérience consistant à lancer 4 fois une pièce équilibrée.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Si l'image de $\Bb_E$ par $f$ est libre, alors $f$ est un isomorphisme.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+Il est possible que $f \neq g$ alors que pour tout $i$, $f(e_i) = g(e_i)$.
+
+** VERIFY QCM 31                                          :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm31
+:END:
+
+Soit $E$ un espace vectoriel de dimension $m$, $B,B'$ deux bases de $E$ et $f$ un endomorphisme de $E$.
+Soit $F$ un espace vectoriel de dimension $k$, $C$ une base de $F$ et $u \in \Ll(E,F)$ un isomorphisme.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$P_{B,B'}\Mat_{B}(x) = \Mat_{B'}(x)$.
+- 1 $P_{B,B'}$ est la /matrice de passage de $B$ à $B'$./
+- 1 $\Mat_{B}(f)\Mat_{B}(x) = \Mat_{B}(f(x))$.
+- 1 $\Mat_{B'}(f) = P_{B',B}\Mat_{B}(f)P_{B,B'}$.
+- 1 $P_{B,B'} = \Mat_{B}\left(B'\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Mat_{B,C}(u) \in \Mm_{m,k}(\K)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Mat_{B,C}(f \circ u) = \Mat_{B}(f)\Mat_{C}(u)$.
+- 1 $\Mat_{B,C}(u)\Mat_{C,B}\left(u^{-1}\right) = I_k$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+La variance est linéaire.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ Si $X \hookrightarrow \Bb(n,p)$ alors $\E(X) = np$ et $\Var(X) = np(1 -p)$.
+
+** TOFIDDLE QCM 32                                        :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm32
+:END:
+
+Soit $E$ un espace vectoriel de dimension $m$, $B,B'$ deux bases de $E$ et $f$ un endomorphisme de $E$.
+Soit $F,G$ deux sous-espaces vectoriels de $E$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $m = \dim\left(\ker(f)\right) + \rg(f)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$F + G \subseteq F \cup G$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $F \cup G \subseteq F + G$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\dim(F) = \dim(G) \Rightarrow F = G$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $\dim(F + G) = \dim(F) + \dim(G) - \dim(F \cap G)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $\dim(F) = \dim(E) \Rightarrow F = E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $\Mat_B(f)$ et $\Mat_{B'}(f)$ sont semblables.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $\Mat_{B,B'}(f)\Mat_B(x) = \Mat_{B'}(f(x))$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$P_{B,B'}\Mat_{B}(x) = \Mat_{B'}(x)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $F \oplus G = E$ \ssi $\forall x \in E, \exists ! (u,v)\in F\times G, x = u + v$.
+
+
+** TOFIDDLE QCM 33                                        :Bayes:
+:PROPERTIES:
+:EXPORT_FILE_NAME: /tmp/qcm33
+:END:
+
+Soit $E$ un espace vectoriel de dimension finie, $B$ bases de $E$. $p \in \Ll(E)$ un projecteur, $s \in \Ll(E)$ une symétrie. $X,Y$ deux variables aléatoires réelles.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Mat_{\Bb}(p)$ est une matrice diagonale avec des $1$ et des $0$ sur la diagonale.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $s \circ s = id_{E}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$p$ est inversible d'inverse $q = \id_{E} - p$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$s$ est la symétrie de direction $\Ker(s)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$p$ est la projection sur $\Ker(p)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $\ensp{x \in E}{s(x) = x}$ est l'espace invariant de la symétrie $s$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+ $\ensp{x \in E}{s(x) = -x}$ est l'espace direction de la symétrie $s$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\ensp{x \in E}{s(x) = x} = \image(s)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\Pro\left(\vert X - \E(X) \vert < \varepsilon\right) \leq \dfrac {\Var(X)}{\varepsilon^2}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\E(XY) = \E(X)\E(Y)$.

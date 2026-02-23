@@ -6,37 +6,9 @@ Usage:  python convert.py quiz.org          (prints JSON to stdout)
 
 Expected Org structure
 ──────────────────────
- ** <title>         <- topic title (** heading)
 
-   <any preamble text>    <- ignored
-
- *** Question   :TF:
- :PROPERTIES:
- :CORRECT:  0              <- 0 = True  1 = False
- :END:
-
-<question text  may span several paragraphs and contain LaTeX>
-
- **** Explanation
-<explanation text>
-
- *** Question   :Mult:
- :PROPERTIES:
- :CORRECT:  2              <- 0-indexed position in the Answers list
- :END:
-
-<question text>
-
- **** Answers
-- <answer 0>
-- <answer 1>
-- <answer 2>
-
- **** Explanation
-<explanation text>
- ** Another Topic                   <- next topic
-...
 """
+
 
 import re
 import json
@@ -47,7 +19,7 @@ import argparse
 
 
 # A ** topic heading (exactly two stars)
-RE_TOPIC = re.compile(r'^\*{2} (.+)$', re.MULTILINE)
+RE_TOPIC = re.compile(r'^\*{2} ([^\n]+):Cuise:[^\n]*$', re.MULTILINE)
 
 # Matches a *** Question heading with a tag (:TF: or :Mult:)
 # Handles arbitrary whitespace between the heading text and the tag.
