@@ -12,7 +12,7 @@ file:data.json
 
 file:quiz.js
 
-** Exemple de Structure du fichier json
+** OLD Exemple de Structure du fichier json             :ARCHIVE:
 
 #+begin_src json :tangle no
 [
@@ -54,7 +54,32 @@ file:quiz.js
 ]
 #+end_src
 
-* JS
+
+** Exemple json
+
+#+begin_src js
+[
+    { "title": "Series and Convergence",
+      "questions": [
+	  {
+	      "text": "The Earth is closer to the Sun in January than in July.",
+	      "answers": ["True", "False"],
+	      "correct": 0,
+	      "explanation": "Yes — the Earth reaches perihelion (closest point) around January 3rd. Northern hemisphere winters are cold despite this because of axial tilt, not distance."
+	  },
+	  {
+	      "text": "Which planet has the most moons in our Solar System?",
+	      "answers": ["Jupiter", "Saturn", "Uranus", "Neptune"],
+	      "correct": 1,
+	      "explanation": "Saturn currently holds the record with 146 confirmed moons (as of 2023), surpassing Jupiter's 95."
+	  }
+      ] },
+    { "title": "Trigonometry",
+      "questions": [ ... ] }
+]
+#+end_src
+
+* JS                                                   :noexport:
 :PROPERTIES:
 :header-args: :tangle quiz.js
 :END:
@@ -100,6 +125,7 @@ function scoringRule(p_correct, n) {
 
 #+name: state
 #+begin_src js :tangle no
+let allTopics  = [];      // full data from data.json
 let questions   = [];
 let answered    = 0;
 let totalScore  = 0;
@@ -111,15 +137,61 @@ const probs     = {};
 #+begin_src js :tangle no
 fetch('data.json')
   .then(r => { if (!r.ok) throw new Error('Could not load data.json'); return r.json(); })
-  .then(data => { questions = data; renderQuestions(); })
+  .then(data => { allTopics = data;  showHome(); })
   .catch(err => {
-    document.getElementById('questionsContainer').innerHTML =
+    document.getElementById('home').innerHTML =
       `<p class="load-error">⚠️ ${err.message}</p>`;
   });
 #+end_src
 
+#+name: topic-selection
+#+begin_src js :tangle no
+
+function showHome() {
+  setView('home');
+
+  const grid = document.getElementById('topicGrid');
+  grid.innerHTML = '';
+
+  allTopics.forEach((topic, ti) => {
+    const card = document.createElement('button');
+    card.className = 'topic-card';
+    card.style.animationDelay = (ti * 0.07) + 's';
+    card.innerHTML = `
+      <span class="topic-num">${String(ti + 1).padStart(2, '0')}</span>
+      <span class="topic-title">${topic.title}</span>
+      <span class="topic-count">${topic.questions.length} question${topic.questions.length > 1 ? 's' : ''}</span>
+    `;
+    card.addEventListener('click', () => startTopic(ti));
+    grid.appendChild(card);
+  });
+
+  // Trigger MathJax on topic titles (they may contain LaTeX)
+  typesetIfReady('#topicGrid');
+}
+#+end_src
+
 #+name: render
 #+begin_src js :tangle no
+function startTopic(ti) {
+  questions  = allTopics[ti].questions;
+  answered   = 0;
+  totalScore = 0;
+
+  document.getElementById('quizTopicTitle').textContent = allTopics[ti].title;
+  document.getElementById('resultPanel').classList.remove('show');
+
+  setView('quiz');
+  renderQuestions();
+}
+
+function backToHome() {
+  setView('home');
+  // Re-render home in case MathJax needs a nudge after DOM changes
+  typesetIfReady('#topicGrid');
+}
+
+
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
@@ -129,9 +201,7 @@ function renderQuestions() {
 
   questions.forEach((q, qi) => {
     const n = q.answers.length;
-    const isTF = n === 2 &&
-      q.answers[0].toLowerCase() === 'true' &&
-      q.answers[1].toLowerCase() === 'false';
+    const isTF =  isTrueFalse(q);
 
     // Initialise uniform distribution
     probs[qi] = new Array(n).fill(1 / n);
@@ -160,12 +230,18 @@ function renderQuestions() {
   });
 
     updateProgress();
-    MathJax.typesetPromise();
+    typesetIfReady('#questionsContainer');
 }
 #+end_src
 
 #+name: truefalse-layout
 #+begin_src js :tangle no
+function isTrueFalse(q) {
+  return q.answers.length === 2 &&
+    q.answers[0].toLowerCase() === 'true' &&
+    q.answers[1].toLowerCase() === 'false';
+}
+
 function renderTrueFalse(qi) {
   return `
     <div class="tf-wrap">
@@ -187,9 +263,8 @@ function renderTrueFalse(qi) {
 }
 
 function wireTrueFalse(qi) {
-  const slider = document.getElementById(`tf-${qi}`);
-  slider.addEventListener('input', () => {
-    const pTrue  = slider.value / 100;
+  document.getElementById(`tf-${qi}`).addEventListener('input', function() {
+    const pTrue  = this.value / 100;
     const pFalse = 1 - pTrue;
     probs[qi][0] = pTrue;
     probs[qi][1] = pFalse;
@@ -204,24 +279,25 @@ function wireTrueFalse(qi) {
 #+name: n-answ-layout
 #+begin_src js :tangle no
 function renderSliders(qi, q) {
+  const n = q.answers.length;
   return q.answers.map((ans, ai) => `
     <div class="slider-row" id="row-${qi}-${ai}">
       <div class="slider-answer">${ans}</div>
       <div class="slider-track-wrap">
         <input type="range" class="slider" id="sl-${qi}-${ai}"
-               min="0" max="100" value="${Math.round(100 / q.answers.length)}" step="1">
+               min="0" max="100" value="${Math.round(100 / n)}" step="1">
         <div class="slider-fill" id="fill-${qi}-${ai}"
-             style="width:${Math.round(100 / q.answers.length)}%"></div>
+             style="width:${Math.round(100 / n)}%"></div>
       </div>
-      <div class="slider-pct" id="pct-${qi}-${ai}">${Math.round(100 / q.answers.length)}%</div>
+      <div class="slider-pct" id="pct-${qi}-${ai}">${Math.round(100 / n)}%</div>
     </div>
   `).join('');
 }
 
 function wireSliders(qi, n) {
   for (let ai = 0; ai < n; ai++) {
-    const sl = document.getElementById(`sl-${qi}-${ai}`);
-    sl.addEventListener('input', () => onSliderMove(qi, ai, n));
+    document.getElementById(`sl-${qi}-${ai}`)
+            .addEventListener('input', () => onSliderMove(qi, ai, n));
   }
 }
 
@@ -268,11 +344,7 @@ function confirmAnswer(qi) {
   const pts     = scoringRule(p_c, n);
 
   // Lock sliders
-  const isTF = n === 2 &&
-    q.answers[0].toLowerCase() === 'true' &&
-    q.answers[1].toLowerCase() === 'false';
-
-  if (isTF) {
+  if (isTrueFalse(q)) {
     document.getElementById(`tf-${qi}`).disabled = true;
   } else {
     for (let ai = 0; ai < n; ai++)
@@ -281,8 +353,9 @@ function confirmAnswer(qi) {
   document.querySelector(`#card-${qi} .btn-confirm`).disabled = true;
   document.querySelector(`#card-${qi} .slider-hint`).style.display = 'none';
 
+
   // Highlight correct answer
-  if (isTF) {
+  if (isTrueFalse(q)) {
     const side = correct === 0 ? 'true' : 'false';
     document.querySelector(`#card-${qi} .tf-label.${side}-label`)
             .classList.add('highlight-correct');
@@ -309,9 +382,9 @@ function confirmAnswer(qi) {
   answered++;
   updateProgress();
   updateScoreBar();
+  typesetIfReady(`#fb-${qi}`);
 
     if (answered === questions.length) setTimeout(showResult, 700);
-  MathJax.typesetPromise();
 }
 #+end_src
 
@@ -388,6 +461,10 @@ function showResult() {
 /* ── BOOTSTRAP ───────────────────────────────────────────────────────────────── */
 <<lecture-data>>
 
+/* ── HOME SCREEN - topic selection ──────────────────────────────────────────────────────────────────── */
+
+<<topic-selection>>
+
 /* ── RENDER ──────────────────────────────────────────────────────────────────── */
 <<render>>
 
@@ -414,46 +491,186 @@ function showResult() {
 <<results>>
 
 /* ── RESTART ─────────────────────────────────────────────────────────────────── */
-function restartQuiz() {
+
+function retryTopic() {
   document.getElementById('resultPanel').classList.remove('show');
   renderQuestions();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 
+/* ── VIEW SWITCHER ────────────────────────────────────────────────────────────── */
+function setView(name) {
+  document.getElementById('home').style.display  = name === 'home'  ? '' : 'none';
+  document.getElementById('quiz').style.display  = name === 'quiz'  ? '' : 'none';
+}
+
+
+
+
 /* ── UTILITY ─────────────────────────────────────────────────────────────────── */
 function pct(p) { return Math.round(p * 100) + '%'; }
+
+function typesetIfReady(selector) {
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+    const el = selector ? [document.querySelector(selector)] : [];
+    MathJax.typesetPromise(el.filter(Boolean));
+  }
+}
+
 #+end_src
 
-* Html
+* Html                                                 :noexport:
 :PROPERTIES:
 :header-args: :tangle index.html
 :END:
 
-#+name: head
-#+begin_src html :tangle no
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bayesian Quiz</title>
-<!--script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/tex-mml-chtml.js"></script-->
-<script>
+
+** Latex Macros
+Issue de help:org-roam-ui-latex-macros :
+
+#+name: Latex-macros
+#+begin_src js :tangle no
 MathJax = {
 tex: {
   inlineMath: [['$', '$']],
   macros: {
-    R: '\\mathbb{R}',
+    ssi: '\\; \\textbf{ssi} \\;',
     N: '\\mathbb{N}',
     Z: '\\mathbb{Z}',
-    Q: '\\mathbb{Q}'
-   }
+    Q: '\\mathbb{Q}',
+    B: '\\mathbb{B}',
+    C: '\\mathbb{C}',
+    D: '\\mathbb{D}',
+    E: '\\mathbb{E}',
+    F: '\\mathbb{F}',
+    Ha: '\\mathbb{H}',
+    K: '\\mathbb{K}',
+    N: '\\mathbb{N}',
+    Q: '\\mathbb{Q}',
+    R: '\\mathbb{R}',
+    S: '\\mathbb{S}',
+    T: '\\mathbb{T}',
+    Pro: '\\mathbb{P}',
+    U: '\\mathbb{U}',
+    Z: '\\mathbb{Z}',
+    R: '\\mathbb{R}',
+    image: 'Im',
+    Vect: 'Vect',
+    rg: 'rg',
+    End: 'End',
+    Hom: 'Hom',
+    Card: 'Card',
+    tanh: '\\operatorname{th}',
+    Aarg: 'arg',
+    Re: '\\operatorname{Re}',
+    Im: '\\operatorname{Im}',
+    bool: '\\{\\text{Vrai}, \\text{Faux}\\}',
+    v: ['\\begin{pmatrix}{#1} \\\\ {#2}\\end{pmatrix}', 2],
+    bv: ['\\begin{bmatrix}{#1} \\\\ {#2}\\end{bmatrix}', 2],
+    vv: ['\\begin{pmatrix}{#1} \\\\ {#2} \\\\ {#3}\\end{pmatrix}', 3],
+    bvv: ['\\begin{bmatrix}{#1} \\\\ {#2} \\\\ {#3}\\end{bmatrix}', 3],
+    fct: ['\\left(\\begin{array}{rcl} {#1} & \\longrightarrow & {#2} \\\\ {#3} & \\mapsto & {#4} \\end{array}\\right)', 4],
+    ov: ['\\overrightarrow{{#1}}', 1],
+    iv: '\\ov{\\imath}',
+    jv: '\\ov{\\jmath}',
+    Legendre: ['\\left(\\dfrac{{#1}}{{#2}}\\right)', 2],
+    carac: ['\\mathbf{1}_{#1}', 1],
+    argsh: 'argsh',
+    Iff: ['\\left[{#1}, {#2}\\right]', 2],
+    Iof: ['\\left]{#1}, {#2}\\right]', 2],
+    Ifo: ['\\left[{#1}, {#2}\\right[\\:', 2],
+    Ioo: ['\\left]{#1}, {#2}\\right[\\:', 2],
+    Ifi: ['\\left[{#1}, {+\\infty}\\right[\\:', 1],
+    Ioi: ['\\left]{#1}, {+\\infty}\\right[\\:', 1],
+    Iif: ['\\left]{-\\infty}, {#1}\\right]', 1],
+    Iio: ['\\left]{-\\infty}, {#1}\\right[\\:', 1],
+    IIff: ['\\left\\llbracket{#1}, {#2}\\right\\rrbracket', 2],
+    IIof: ['\\left\\rrbracket{#1}, {#2}\\right\\rrbracket', 2],
+    IIfo: ['\\left\\llbracket{#1}, {#2}\\right\\llbracket', 2],
+    IIoo: ['\\left\\rrbracket{#1}, {#2}\\right\\llbracket', 2],
+    diag: 'diag',
+    Mat: 'Mat',
+    tr: 'tr',
+    po: ['\\!\\!\\underset{{#1}}{\\;{o}\\!}', 1],
+    gO: ['\\!\\!\\underset{{#1}}{\\;\\Oo\\!}', 1],
+    simu: ['\\underset{{#1}}{\\sim}', 1],
+    limu: ['\\underset{{#1}}{\\lim}', 1],
+    tou: ['\\underset{{#1}}{\\longrightarrow}', 1],
+    Var: '\\mathbb V',
+    labelitemi: '$\\bullet$',
+    labelitemii: '$\\blacktriangleright$',
+    labelitemiii: '$\\circ$',
+    labelitemiv: '$\\triangleright$',
+    ogfg: ['\\og~{#1}~\\fg', 1],
+    facile: '\\faBicycle{}',
+    moyen: '\\faPlane{}',
+    dur: '\\faRocket{}',
+    doublebarre: '\\faBullseye{}',
+    cible: '\\faBullseye{}',
+    tlong: '\\faHourglassEnd{}\\ ',
+    court: '\\faHourglassO{}\\ ',
+    ordi: '\\faLaptop{}\\ ',
+    ecrit: '\\faPencil{}\\ ',
+    llsi: '\\faWrench{}\\ ',
+    llpc: '\\faFlask{}\\ ',
+    attention: '\\faWarning{}\\ ',
+    methode: '\\faCube{}\\ ',
+    Pp: '\\mathcal{P}',
+    Qq: '\\mathcal{Q}',
+    Rr: '\\mathcal{R}',
+    Ss: '\\mathcal{S}',
+    Tt: '\\mathcal{T}',
+    Uu: '\\mathcal{U}',
+    Gl: '\\mathcal{G}\\ell',
+    Sf: '\\mathfrak{S}',
+    Al: '\\mathfrak{A}',
+    dd: 'd\\!',
+    dbarre: '\\bar{\\partial}',
+    ddbarre: '\\partial\\!\\bar{\\partial}',
+    dpp: ['\\dfrac{\\partial{#1}}{\\partial{#2}}', 2],
+    dppp: ['\\dfrac{\\partial^2{#1}}{\\partial{#2}\\partial{#3}}',  3],
+    dpppp: ['\\dfrac{\\partial^3{#1}}{\\partial{#2}\\partial{#3}\\partial{#4}}', 4],
+    dpppP: ['\\dfrac{\\partial^3{#1}}{\\partial{#2} {#3} {#4}}', 4],
+    Div: 'div',
+    demi: '\\frac{1}{2}',
+    ssi: '\\; \\textbf{ssi} \\;',
+    Vv: '| \\! | \\! |',
+    Nld: ['\\left\\Vert {#1} \\right\\Vert', 1],
+    NLd: ['\\left\\Vert {#1} \\right\\Vert_{L^2}', 1],
+    sh: 'sh',
+    ch: 'ch',
+    Id: 'Id',
+    id: 'id',
+    llbracket: '[\\![',
+    rrbracket: ']\\!]',
+    name: ['{#1}\\textsc{ {#2}}', 2],
+    ens: ['\\left\\lbrace {#1} \\; \\middle| \\; {#2} \\right\\rbrace ', 2],
+    ensp: ['\\left\\lbrace {#1} \\; : \\; {#2} \\right\\rbrace ', 2],
+    ensva: ['{\\color{DarkBlue}\\left\\lbrace \\color{black} {#1} \\color{DarkBlue}\\right\\rbrace}', 1],
+    dessous: ['\\underset{{#1}}{\\underbrace{{#2}}}', 2]
+  }
   }
  };
+
+#+end_src
+
+#+name: head
+#+begin_src html :tangle no :noweb yes
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM : Maths TSI1</title>
+<!--script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/tex-mml-chtml.js"></script-->
+<script>
+  <<Latex-macros>>
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 #+end_src
+
+** Html
 
 #+name: header
 #+begin_src html :tangle no
@@ -475,12 +692,26 @@ tex: {
   <<head>>
 </head>
 <body>
-<div class="quiz-wrap">
+<article>
+<!--div id="quiz-wrap"-->
 
   <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+    <div id="home">
   <header>
     <<header>>
   </header>
+    <div class="topic-grid" id="topicGrid">
+      <!-- Filled dynamically by quiz.js -->
+    </div>
+  </div>
+    
+  <div id="quiz" style="display:none">
+
+    <!-- Back button + topic title -->
+    <div class="quiz-header">
+      <button class="btn-back" onclick="backToHome()">&#8592; Thèmes</button>
+      <span class="quiz-topic-title" id="quizTopicTitle"></span>
+    </div>
 
   <!-- ── Progress bar + live score ──────────────────────────────────────────── -->
   <div class="top-bar">
@@ -510,15 +741,23 @@ tex: {
     </div>
     <div class="result-title" id="resultTitle">—</div>
     <div class="result-sub"   id="resultSub">—</div>
-    <button class="btn-restart" onclick="restartQuiz()">↺ Réessayer</button>
+      <div class="result-actions">
+        <button class="btn-restart" onclick="backToHome()">&#8592; Tous le thèmes</button>
+        <button class="btn-restart"   onclick="retryTopic()">↺ Réessayer ce thème</button>
+      </div>
   </div>
 
-</div><!-- /.quiz-wrap -->
+<!--/div--><!-- /.quiz-wrap -->
+</article>
 
 <script src="quiz.js"></script>
 </body>
 </html>
 #+end_src
+
+* CSS                                                  :noexport:
+
+file:style.css
 
 * Export to JSON via Python                            :noexport:
 
@@ -549,38 +788,41 @@ print(json.dumps(data, indent=2, ensure_ascii=False))
 
 ** Python V2
 :PROPERTIES:
-:header-args: :tangle /tmp/QCM/convert.py
+:header-args: :tangle convert.py
 :END:
 
 #+name: expected-org-structure
 #+begin_src org :tangle no
- ** MCQ : <title>          <- optional, ignored
-    <any preamble text>    <- ignored
- 
+ ** <title>         <- topic title (** heading)
+
+   <any preamble text>    <- ignored
+
  *** Question   :TF:
  :PROPERTIES:
- :CORRECT:  0              <- 0 = True, 1 = False
+ :CORRECT:  0              <- 0 = True  1 = False
  :END:
- 
- <question text, may span several paragraphs and contain LaTeX>
- 
+
+<question text  may span several paragraphs and contain LaTeX>
+
  **** Explanation
- <explanation text>
- 
+<explanation text>
+
  *** Question   :Mult:
  :PROPERTIES:
  :CORRECT:  2              <- 0-indexed position in the Answers list
  :END:
- 
- <question text>
- 
+
+<question text>
+
  **** Answers
- - <answer 0>
- - <answer 1>
- - <answer 2>
- 
+- <answer 0>
+- <answer 1>
+- <answer 2>
+
  **** Explanation
- <explanation text>
+<explanation text>
+ ** Another Topic                   <- next topic
+...
 #+end_src
 
 #+name: preamble
@@ -606,6 +848,10 @@ import argparse
 #+begin_src python
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
+# A ** topic heading (exactly two stars)
+RE_TOPIC = re.compile(r'^\*{2} (.+)$', re.MULTILINE)
+
 # Matches a *** Question heading with a tag (:TF: or :Mult:)
 # Handles arbitrary whitespace between the heading text and the tag.
 RE_QUESTION = re.compile(
@@ -615,12 +861,6 @@ RE_QUESTION = re.compile(
 
 # Matches a **** sub-heading
 RE_SUBHEADING = re.compile(r'^\*{4}\s+\S', re.MULTILINE)
-
-def between(text, start_m, end_m=None):
-    """Return the text between end-of-match start_m and start-of-match end_m."""
-    start = start_m.end()
-    end   = end_m.start() if end_m else len(text)
-    return text[start:end].strip()
 
 
 def find_subheading(block, name):
@@ -635,78 +875,116 @@ def find_subheading(block, name):
         r'(?=^\*{4}|\Z)',                             # until next **** or end
         re.MULTILINE | re.DOTALL
     )
-    return pattern.search(block)
+    m = pattern.search(block)
+    return m.group(1).strip() if m else None
 #+end_src
 
 #+name: parser
 #+begin_src python
 # ── Parser ────────────────────────────────────────────────────────────────────
 
+def parse_question(block, idx_for_warnings):
+    """Parse a single *** Question block into a dict, or None on hard error."""
+    tag_m = re.search(r':(TF|Mult):', block.splitlines()[0])
+    tag   = tag_m.group(1) if tag_m else None
+    if not tag:
+        print(f"⚠️  Question {idx_for_warnings}: no :TF: or :Mult: tag — skipped.",
+              file=sys.stderr)
+        return None
+
+    # :CORRECT:
+    correct_m = re.search(r':CORRECT:\s*(\d+)', block)
+    if not correct_m:
+        print(f"⚠️  Question {idx_for_warnings}: no :CORRECT: — defaulting to 0.",
+              file=sys.stderr)
+    correct = int(correct_m.group(1)) if correct_m else 0
+
+    # Question text: between :END: and first **** sub-heading
+    end_prop_m  = re.search(r':END:', block)
+    first_sub_m = RE_SUBHEADING.search(block)
+    q_start = end_prop_m.end()    if end_prop_m  else 0
+    q_end   = first_sub_m.start() if first_sub_m else len(block)
+    question_text = block[q_start:q_end].strip()
+
+    # Answers
+    if tag == 'TF':
+        answers = ["True", "False"]
+    else:
+        raw = find_subheading(block, 'Answers')
+        if raw is None:
+            print(f"⚠️  Question {idx_for_warnings}: no **** Answers sub-heading — skipped.",
+                  file=sys.stderr)
+            return None
+        answers = [a.strip()
+                   for a in re.findall(r'^\s*-\s+(.+)', raw, re.MULTILINE)]
+
+    # Explanation
+    explanation = find_subheading(block, 'Explanation') or ''
+
+    return {
+        "text":        question_text,
+        "answers":     answers,
+        "correct":     correct,
+        "explanation": explanation,
+    }
+
+
+# ── Top-level parser ──────────────────────────────────────────────────────────
+
 def parse(path):
     text = open(path, encoding='utf-8').read()
 
-    questions = []
-    q_matches = list(RE_QUESTION.finditer(text))
-
-    if not q_matches:
-        print("⚠️  No questions found. Check that headings use *** and tags :TF: or :Mult:",
-              file=sys.stderr)
+    topic_matches = list(RE_TOPIC.finditer(text))
+    if not topic_matches:
+        print("⚠️  No ** topic headings found.", file=sys.stderr)
         return []
 
-    for idx, m in enumerate(q_matches):
-        tag   = m.group(1)          # 'TF' or 'Mult'
-        start = m.start()
-        end   = q_matches[idx + 1].start() if idx + 1 < len(q_matches) else len(text)
-        block = text[start:end]
+    topics = []
+    q_counter = 0
 
-        # ── CORRECT index ─────────────────────────────────────────────────────
-        correct_m = re.search(r':CORRECT:\s*(\d+)', block)
-        if not correct_m:
-            print(f"⚠️  No :CORRECT: property in question {idx + 1}, defaulting to 0.",
+    for t_idx, t_m in enumerate(topic_matches):
+        # Raw title: strip org tags like :noexport: and extra whitespace
+        raw_title = t_m.group(1)
+        title = re.sub(r'\s*:[A-Za-z_]+:\s*$', '', raw_title).strip()
+
+        # Skip headings explicitly tagged :noexport:
+        if ':noexport:' in raw_title.lower():
+            continue
+
+        # Text of this topic: from after its heading to before the next ** heading
+        t_start = t_m.end()
+        t_end   = topic_matches[t_idx + 1].start() \
+                  if t_idx + 1 < len(topic_matches) else len(text)
+        topic_block = text[t_start:t_end]
+
+        # Find all *** Question blocks within this topic
+        q_matches = list(RE_QUESTION.finditer(topic_block))
+        questions = []
+
+        for q_idx, q_m in enumerate(q_matches):
+            q_counter += 1
+            q_start = q_m.start()
+            q_end   = q_matches[q_idx + 1].start() \
+                      if q_idx + 1 < len(q_matches) else len(topic_block)
+            q_block = topic_block[q_start:q_end]
+
+            q = parse_question(q_block, q_counter)
+            if q:
+                questions.append(q)
+
+        if questions:
+            topics.append({"title": title, "questions": questions})
+        else:
+            print(f"⚠️  Topic '{title}' has no valid questions — omitted.",
                   file=sys.stderr)
-        correct = int(correct_m.group(1)) if correct_m else 0
 
-        # ── Question text: between :END: and the first **** sub-heading ───────
-        end_prop_m   = re.search(r':END:', block)
-        first_sub_m  = RE_SUBHEADING.search(block)
-
-        q_start = end_prop_m.end()   if end_prop_m  else m.end()
-        q_end   = first_sub_m.start() if first_sub_m else len(block)
-
-        question_text = block[q_start:q_end].strip()
-
-        # ── Answers ───────────────────────────────────────────────────────────
-        if tag == 'TF':
-            answers = ["True", "False"]
-
-        else:   # :Mult:
-            answers_m = find_subheading(block, 'Answers')
-            if not answers_m:
-                print(f"⚠️  No **** Answers sub-heading in Mult question {idx + 1}.",
-                      file=sys.stderr)
-                answers = []
-            else:
-                # Bullet items: lines starting with optional spaces then "- "
-                answers = re.findall(r'^\s*-\s+(.+)', answers_m.group(1), re.MULTILINE)
-                answers = [a.strip() for a in answers]
-
-        # ── Explanation ───────────────────────────────────────────────────────
-        expl_m = find_subheading(block, 'Explanation')
-        explanation = expl_m.group(1).strip() if expl_m else ''
-
-        questions.append({
-            "text":        question_text,
-            "answers":     answers,
-            "correct":     correct,
-            "explanation": explanation,
-        })
-
-    return questions
+    return topics
 #+end_src
 
 #+name: CLI
 #+begin_src python
 # ── CLI ───────────────────────────────────────────────────────────────────────
+
 
 def main():
     ap = argparse.ArgumentParser(description='Convert Org-mode quiz to JSON')
@@ -715,12 +993,14 @@ def main():
     args = ap.parse_args()
 
     data = parse(args.org_file)
+    n_q  = sum(len(t['questions']) for t in data)
     out  = json.dumps(data, indent=2, ensure_ascii=False)
 
     if args.output:
         with open(args.output, 'w', encoding='utf-8') as f:
             f.write(out)
-        print(f"✓ Exported {len(data)} question(s) to {args.output}", file=sys.stderr)
+        print(f"✓ Exported {len(data)} topic(s), {n_q} question(s) → {args.output}",
+              file=sys.stderr)
     else:
         print(out)
 
@@ -740,19 +1020,30 @@ python3 convert.py quiz.org -o data.json && echo "✓ done"
 : ✓ done
 
 
-* Start server
+* Start server                                         :noexport:
 
 #+begin_src sh
 python3 -m http.server
 #+end_src
 
-* TODO TAF [0/7]
+#+RESULTS:
 
-- [ ] Faire un dépot Git à part
-- [ ] Gérer plusieurs QCM et le choix du thème
-  -> poser la question à Claude.
+* TODO TAF [3/9]                                       :noexport:
+
+- [X] Faire un dépot Git à part
+- [X] Gérer plusieurs QCM et le choix du thème
+  - [X] Poser la question à Claude.
+  - [X] Intégrer sa réponse (4 fichiers à modifier)
 - [?] Ajout de tags ?
+- [X] Intégrer mes macro LaTeX perso
+- [ ] Améliorer le HTML
+  - nav
+  - [ ] article
+  - [ ] sections
+- [ ] Améliorer le CSS
+  - choix des topics
 - [ ] Convertir les anciens QCM
+  - [ ] Automatiser les traductions
   - [ ] Ajouter des explications 
 - [ ] créer d'autres QCM
 - [ ] Vérifier si c'est ok sur portable
@@ -761,7 +1052,9 @@ python3 -m http.server
 
 * QCM par thèmes
 
-** MCQ : example
+file:~/Git/tsi/QCM/
+
+** MCQ : example                                       :noexport:
 
 Let $I \subseteq \R$ be a non-empty open interval.
 
@@ -807,3 +1100,175 @@ $\frac {\sqrt 2} 2 = \cos\left(\frac \pi 4\right) = \cos\left(2 \times \frac \pi
 Therefore $\cos^2\left(\frac \pi 8\right) = \frac 1 2\left(\frac {\sqrt 2} 2 + 1\right) = \frac {2 + \sqrt 2} 4$.
 
 Since $\frac \pi 8 \in \left(0, \frac \pi 2\right)$, one has $\cos\left(\frac \pi 8\right) > 0$ and thus $\cos\left(\frac \pi 8\right) = \sqrt{\cos^2\left(\frac \pi 8\right)} = \frac {\sqrt{2 + \sqrt 2}} 2$.
+
+** Fonctions
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  0
+:END:
+
+$\arcsin$ est définie sur $\Iff {-1} 1$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\arctan$ est définie sur $\Ioo {-\frac \pi 2} {\frac \pi 2}$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  1
+:END:
+
+$\arccos'(x) = -\dfrac 1 {1 - x^2}$.
+
+** Divers
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+ $x \mapsto \int_2^x \dfrac {\dd t}{\ln(t)}$ est une primitive de $\frac 1 {\ln}$ sur $\Ioo 2 {+\infty}$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ Le groupe des racines \(n\)-èmes de l'unité est $\ens{z \in \C}{ \vert z \vert = 1}$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ Le problème de Cauchy $y'(x) + \sin(x)y(x) = e^x$ et $y(0) = -1$ n'a aucune solution sur $\R$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $\sqrt i$ est l'unique solution de partie imaginaire positive de $z^2 = i$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+ Les solutions complexes de $z^5 = -3$ sont les affixes des sommets d'un pentagone régulier.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+ Une équation du second degré sur $\C$ possède toujours 1 ou 2 solutions.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $t \mapsto e^{-at}$ est solution de $y'(t) + a(t)y(t) = 0$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $\displaystyle (a + b)^n = \sum_{k = 0}^n \binom n k a^k b^n$
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+ $\binom {n} {k + 1} + \binom {n} k  = \binom {n + 1} {k + 1}$
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ Les solutions homogènes sont toujours solutions de l'équation différentielle avec second membre.
+
+
+ 
+** Géométrie 3D
+
+
+
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+ $\ov u$ a pour coordonnées $(\alpha, \beta, \gamma) \ssi \ov u = \alpha \iv + \beta \jv + \gamma \ov k$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $\det\left(\ov u, \ov v, \ov w\right) = 0 \; \Leftrightarrow \; \ov u, \ov v, \ov w$ sont colinéaires.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $\ov u \wedge \ov v = \ov 0$ si et seulement si l'un des deux est le vecteur nul.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ Au cours de la résolution d'un système, un /pivot/ est une opération faisant apparaître un zéro.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ Les racines $7$ èmes de l'unité sont les $e^{i \frac {k\pi} 7}$ pour $k$ variant de $0$ à $6$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ Un système $3 \times 3$ a toujours : $0$, $3$ ou une infinité de solutions.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $\det\left(\ov u, \ov v, \ov w\right) = \left(\ov u \wedge \ov w\right) \cdot \ov v$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $\ov u \wedge \ov v = \Nld{\ov u}\Nld{\ov v} \left\vert \sin\left(\widehat{\ov u,\ov v}\right)\right\vert$.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+ $\det\left(\ov {u}, \ov {v}, \ov {w}\right) = 1$ si et seulement si $\left(\ov u, \ov v, \ov w\right)$ est une base est orthonormée directe.
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+ $\ov k \wedge \jv = -\iv$

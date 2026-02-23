@@ -1,31 +1,224 @@
 [
   {
-    "text": "Is $\\left(\\sum_{k} \\frac 1 k\\right)_k$ convergent ?",
-    "answers": [
-      "True",
-      "False"
-    ],
-    "correct": 1,
-    "explanation": "No : forall all $n \\in \\N$, we have $\\sum_{k = 2^n}^{2^{n + 1} - 1} \\frac 1 k > \\sum_{k = 2^n}^{2^{n + 1} - 1} \\frac 1 {2^{n + 1}} = \\frac 1 2$. Therefore $\\sum_{k = 1}^{2^{n + 1}} \\frac 1 k > \\frac n 2$ and thus diverges to $+\\infty$ as $n \\to +\\infty$."
+    "title": "Fonctions",
+    "questions": [
+      {
+        "text": "$\\arcsin$ est définie sur $\\Iff {-1} 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arctan$ est définie sur $\\Ioo {-\\frac \\pi 2} {\\frac \\pi 2}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arccos'(x) = -\\dfrac 1 {1 - x^2}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
   },
   {
-    "text": "Is $\\left(\\sum_{k} \\frac {(-1)^k} k\\right)_k$ convergent ?",
-    "answers": [
-      "True",
-      "False"
-    ],
-    "correct": 0,
-    "explanation": "Yes : it satisfies the criterium for alternated series."
+    "title": "Divers",
+    "questions": [
+      {
+        "text": "$x \\mapsto \\int_2^x \\dfrac {\\dd t}{\\ln(t)}$ est une primitive de $\\frac 1 {\\ln}$ sur $\\Ioo 2 {+\\infty}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Le groupe des racines \\(n\\)-èmes de l'unité est $\\ens{z \\in \\C}{ \\vert z \\vert = 1}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Le problème de Cauchy $y'(x) + \\sin(x)y(x) = e^x$ et $y(0) = -1$ n'a aucune solution sur $\\R$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\sqrt i$ est l'unique solution de partie imaginaire positive de $z^2 = i$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Les solutions complexes de $z^5 = -3$ sont les affixes des sommets d'un pentagone régulier.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Une équation du second degré sur $\\C$ possède toujours 1 ou 2 solutions.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$t \\mapsto e^{-at}$ est solution de $y'(t) + a(t)y(t) = 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle (a + b)^n = \\sum_{k = 0}^n \\binom n k a^k b^n$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\binom {n} {k + 1} + \\binom {n} k  = \\binom {n + 1} {k + 1}$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Les solutions homogènes sont toujours solutions de l'équation différentielle avec second membre.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
   },
   {
-    "text": "What is the value of $\\cos\\left(\\frac \\pi 8\\right)$",
-    "answers": [
-      "$\\frac {\\sqrt 2} 4$",
-      "$\\frac {\\sqrt 8} 4$",
-      "$\\frac {\\sqrt{2 - \\sqrt 2 }} 2$",
-      "$\\frac {\\sqrt{2 + \\sqrt 2}} 2$"
-    ],
-    "correct": 3,
-    "explanation": "$\\frac {\\sqrt 2} 2 = \\cos\\left(\\frac \\pi 4\\right) = \\cos\\left(2 \\times \\frac \\pi 8\\right) = 2\\cos^2\\left(\\frac \\pi 8\\right) - 1$\nTherefore $\\cos^2\\left(\\frac \\pi 8\\right) = \\frac 1 2\\left(\\frac {\\sqrt 2} 2 + 1\\right) = \\frac {2 + \\sqrt 2} 4$.\n\nSince $\\frac \\pi 8 \\in \\left(0, \\frac \\pi 2\\right)$, one has $\\cos\\left(\\frac \\pi 8\\right) > 0$ and thus $\\cos\\left(\\frac \\pi 8\\right) = \\sqrt{\\cos^2\\left(\\frac \\pi 8\\right)} = \\frac {\\sqrt{2 + \\sqrt 2}} 2$."
+    "title": "Géométrie 3D",
+    "questions": [
+      {
+        "text": "$\\ov u$ a pour coordonnées $(\\alpha, \\beta, \\gamma)$ \\ssi $\\ov u = \\alpha \\iv + \\beta \\jv + \\gamma \\ov k$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\det\\left(\\ov u, \\ov v, \\ov w\\right) = 0 \\; \\Leftrightarrow \\; \\ov u, \\ov v, \\ov w$ sont colinéaires.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\ov u \\wedge \\ov v = \\ov 0$ si et seulement si l'un des deux est le vecteur nul.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Au cours de la résolution d'un système, un /pivot/ est une opération faisant apparaître un zéro.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Les racines $7$ èmes de l'unité sont les $e^{i \\frac {k\\pi} 7}$ pour $k$ variant de $0$ à $6$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Un système $3 \\times 3$ a toujours : $0$, $3$ ou une infinité de solutions.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\det\\left(\\ov u, \\ov v, \\ov w\\right) = \\left(\\ov u \\wedge \\ov w\\right) \\cdot \\ov v$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\ov u \\wedge \\ov v = \\Nld{\\ov u}\\Nld{\\ov v} \\left\\vert \\sin\\left(\\widehat{\\ov u,\\ov v}\\right)\\right\\vert$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\det\\left(\\ov {u}, \\ov {v}, \\ov {w}\\right) = 1$ si et seulement si $\\left(\\ov u, \\ov v, \\ov w\\right)$ est une base est orthonormée directe.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\ov k \\wedge \\jv = -\\iv$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      }
+    ]
   }
 ]

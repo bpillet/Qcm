@@ -43,6 +43,7 @@ function scoringRule(p_correct, n) {
 
 
 /* ── STATE ───────────────────────────────────────────────────────────────────── */
+let allTopics  = [];      // full data from data.json
 let questions   = [];
 let answered    = 0;
 let totalScore  = 0;
@@ -52,13 +53,58 @@ const probs     = {};
 /* ── BOOTSTRAP ───────────────────────────────────────────────────────────────── */
 fetch('data.json')
   .then(r => { if (!r.ok) throw new Error('Could not load data.json'); return r.json(); })
-  .then(data => { questions = data; renderQuestions(); })
+  .then(data => { allTopics = data;  showHome(); })
   .catch(err => {
-    document.getElementById('questionsContainer').innerHTML =
+    document.getElementById('home').innerHTML =
       `<p class="load-error">⚠️ ${err.message}</p>`;
   });
 
+/* ── HOME SCREEN - topic selection ──────────────────────────────────────────────────────────────────── */
+
+
+function showHome() {
+  setView('home');
+
+  const grid = document.getElementById('topicGrid');
+  grid.innerHTML = '';
+
+  allTopics.forEach((topic, ti) => {
+    const card = document.createElement('button');
+    card.className = 'topic-card';
+    card.style.animationDelay = (ti * 0.07) + 's';
+    card.innerHTML = `
+      <span class="topic-num">${String(ti + 1).padStart(2, '0')}</span>
+      <span class="topic-title">${topic.title}</span>
+      <span class="topic-count">${topic.questions.length} question${topic.questions.length > 1 ? 's' : ''}</span>
+    `;
+    card.addEventListener('click', () => startTopic(ti));
+    grid.appendChild(card);
+  });
+
+  // Trigger MathJax on topic titles (they may contain LaTeX)
+  typesetIfReady('#topicGrid');
+}
+
 /* ── RENDER ──────────────────────────────────────────────────────────────────── */
+function startTopic(ti) {
+  questions  = allTopics[ti].questions;
+  answered   = 0;
+  totalScore = 0;
+
+  document.getElementById('quizTopicTitle').textContent = allTopics[ti].title;
+  document.getElementById('resultPanel').classList.remove('show');
+
+  setView('quiz');
+  renderQuestions();
+}
+
+function backToHome() {
+  setView('home');
+  // Re-render home in case MathJax needs a nudge after DOM changes
+  typesetIfReady('#topicGrid');
+}
+
+
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
@@ -68,9 +114,7 @@ function renderQuestions() {
 
   questions.forEach((q, qi) => {
     const n = q.answers.length;
-    const isTF = n === 2 &&
-      q.answers[0].toLowerCase() === 'true' &&
-      q.answers[1].toLowerCase() === 'false';
+    const isTF =  isTrueFalse(q);
 
     // Initialise uniform distribution
     probs[qi] = new Array(n).fill(1 / n);
@@ -99,12 +143,18 @@ function renderQuestions() {
   });
 
     updateProgress();
-    MathJax.typesetPromise();
+    typesetIfReady('#questionsContainer');
 }
 
 /* ── TRUE / FALSE LAYOUT ─────────────────────────────────────────────────────
    One slider for P(True); P(False) updates automatically.
 ────────────────────────────────────────────────────────────────────────────── */
+function isTrueFalse(q) {
+  return q.answers.length === 2 &&
+    q.answers[0].toLowerCase() === 'true' &&
+    q.answers[1].toLowerCase() === 'false';
+}
+
 function renderTrueFalse(qi) {
   return `
     <div class="tf-wrap">
@@ -126,9 +176,8 @@ function renderTrueFalse(qi) {
 }
 
 function wireTrueFalse(qi) {
-  const slider = document.getElementById(`tf-${qi}`);
-  slider.addEventListener('input', () => {
-    const pTrue  = slider.value / 100;
+  document.getElementById(`tf-${qi}`).addEventListener('input', function() {
+    const pTrue  = this.value / 100;
     const pFalse = 1 - pTrue;
     probs[qi][0] = pTrue;
     probs[qi][1] = pFalse;
@@ -144,24 +193,25 @@ function wireTrueFalse(qi) {
    proportionally among the others.
 ────────────────────────────────────────────────────────────────────────────── */
 function renderSliders(qi, q) {
+  const n = q.answers.length;
   return q.answers.map((ans, ai) => `
     <div class="slider-row" id="row-${qi}-${ai}">
       <div class="slider-answer">${ans}</div>
       <div class="slider-track-wrap">
         <input type="range" class="slider" id="sl-${qi}-${ai}"
-               min="0" max="100" value="${Math.round(100 / q.answers.length)}" step="1">
+               min="0" max="100" value="${Math.round(100 / n)}" step="1">
         <div class="slider-fill" id="fill-${qi}-${ai}"
-             style="width:${Math.round(100 / q.answers.length)}%"></div>
+             style="width:${Math.round(100 / n)}%"></div>
       </div>
-      <div class="slider-pct" id="pct-${qi}-${ai}">${Math.round(100 / q.answers.length)}%</div>
+      <div class="slider-pct" id="pct-${qi}-${ai}">${Math.round(100 / n)}%</div>
     </div>
   `).join('');
 }
 
 function wireSliders(qi, n) {
   for (let ai = 0; ai < n; ai++) {
-    const sl = document.getElementById(`sl-${qi}-${ai}`);
-    sl.addEventListener('input', () => onSliderMove(qi, ai, n));
+    document.getElementById(`sl-${qi}-${ai}`)
+            .addEventListener('input', () => onSliderMove(qi, ai, n));
   }
 }
 
@@ -206,11 +256,7 @@ function confirmAnswer(qi) {
   const pts     = scoringRule(p_c, n);
 
   // Lock sliders
-  const isTF = n === 2 &&
-    q.answers[0].toLowerCase() === 'true' &&
-    q.answers[1].toLowerCase() === 'false';
-
-  if (isTF) {
+  if (isTrueFalse(q)) {
     document.getElementById(`tf-${qi}`).disabled = true;
   } else {
     for (let ai = 0; ai < n; ai++)
@@ -219,8 +265,9 @@ function confirmAnswer(qi) {
   document.querySelector(`#card-${qi} .btn-confirm`).disabled = true;
   document.querySelector(`#card-${qi} .slider-hint`).style.display = 'none';
 
+
   // Highlight correct answer
-  if (isTF) {
+  if (isTrueFalse(q)) {
     const side = correct === 0 ? 'true' : 'false';
     document.querySelector(`#card-${qi} .tf-label.${side}-label`)
             .classList.add('highlight-correct');
@@ -247,9 +294,9 @@ function confirmAnswer(qi) {
   answered++;
   updateProgress();
   updateScoreBar();
+  typesetIfReady(`#fb-${qi}`);
 
     if (answered === questions.length) setTimeout(showResult, 700);
-  MathJax.typesetPromise();
 }
 
 
@@ -307,12 +354,29 @@ function showResult() {
 }
 
 /* ── RESTART ─────────────────────────────────────────────────────────────────── */
-function restartQuiz() {
+
+function retryTopic() {
   document.getElementById('resultPanel').classList.remove('show');
   renderQuestions();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 
+/* ── VIEW SWITCHER ────────────────────────────────────────────────────────────── */
+function setView(name) {
+  document.getElementById('home').style.display  = name === 'home'  ? '' : 'none';
+  document.getElementById('quiz').style.display  = name === 'quiz'  ? '' : 'none';
+}
+
+
+
+
 /* ── UTILITY ─────────────────────────────────────────────────────────────────── */
 function pct(p) { return Math.round(p * 100) + '%'; }
+
+function typesetIfReady(selector) {
+  if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+    const el = selector ? [document.querySelector(selector)] : [];
+    MathJax.typesetPromise(el.filter(Boolean));
+  }
+}

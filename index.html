@@ -3,20 +3,131 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bayesian Quiz</title>
+  <title>QCM : Maths TSI1</title>
   <!--script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/tex-mml-chtml.js"></script-->
   <script>
-  MathJax = {
-  tex: {
-    inlineMath: [['$', '$']],
-    macros: {
-      R: '\\mathbb{R}',
-      N: '\\mathbb{N}',
-      Z: '\\mathbb{Z}',
-      Q: '\\mathbb{Q}'
-     }
-    }
-   };
+    MathJax = {
+    tex: {
+      inlineMath: [['$', '$']],
+      macros: {
+        ssi: '\\; \\textbf{ssi} \\;',
+        N: '\\mathbb{N}',
+        Z: '\\mathbb{Z}',
+        Q: '\\mathbb{Q}',
+        B: '\\mathbb{B}',
+        C: '\\mathbb{C}',
+        D: '\\mathbb{D}',
+        E: '\\mathbb{E}',
+        F: '\\mathbb{F}',
+        Ha: '\\mathbb{H}',
+        K: '\\mathbb{K}',
+        N: '\\mathbb{N}',
+        Q: '\\mathbb{Q}',
+        R: '\\mathbb{R}',
+        S: '\\mathbb{S}',
+        T: '\\mathbb{T}',
+        Pro: '\\mathbb{P}',
+        U: '\\mathbb{U}',
+        Z: '\\mathbb{Z}',
+        R: '\\mathbb{R}',
+        image: 'Im',
+        Vect: 'Vect',
+        rg: 'rg',
+        End: 'End',
+        Hom: 'Hom',
+        Card: 'Card',
+        tanh: '\\operatorname{th}',
+        Aarg: 'arg',
+        Re: '\\operatorname{Re}',
+        Im: '\\operatorname{Im}',
+        bool: '\\{\\text{Vrai}, \\text{Faux}\\}',
+        v: ['\\begin{pmatrix}{#1} \\\\ {#2}\\end{pmatrix}', 2],
+        bv: ['\\begin{bmatrix}{#1} \\\\ {#2}\\end{bmatrix}', 2],
+        vv: ['\\begin{pmatrix}{#1} \\\\ {#2} \\\\ {#3}\\end{pmatrix}', 3],
+        bvv: ['\\begin{bmatrix}{#1} \\\\ {#2} \\\\ {#3}\\end{bmatrix}', 3],
+        fct: ['\\left(\\begin{array}{rcl} {#1} & \\longrightarrow & {#2} \\\\ {#3} & \\mapsto & {#4} \\end{array}\\right)', 4],
+        ov: ['\\overrightarrow{{#1}}', 1],
+        iv: '\\ov{\\imath}',
+        jv: '\\ov{\\jmath}',
+        Legendre: ['\\left(\\dfrac{{#1}}{{#2}}\\right)', 2],
+        carac: ['\\mathbf{1}_{#1}', 1],
+        argsh: 'argsh',
+        Iff: ['\\left[{#1}, {#2}\\right]', 2],
+        Iof: ['\\left]{#1}, {#2}\\right]', 2],
+        Ifo: ['\\left[{#1}, {#2}\\right[\\:', 2],
+        Ioo: ['\\left]{#1}, {#2}\\right[\\:', 2],
+        Ifi: ['\\left[{#1}, {+\\infty}\\right[\\:', 1],
+        Ioi: ['\\left]{#1}, {+\\infty}\\right[\\:', 1],
+        Iif: ['\\left]{-\\infty}, {#1}\\right]', 1],
+        Iio: ['\\left]{-\\infty}, {#1}\\right[\\:', 1],
+        IIff: ['\\left\\llbracket{#1}, {#2}\\right\\rrbracket', 2],
+        IIof: ['\\left\\rrbracket{#1}, {#2}\\right\\rrbracket', 2],
+        IIfo: ['\\left\\llbracket{#1}, {#2}\\right\\llbracket', 2],
+        IIoo: ['\\left\\rrbracket{#1}, {#2}\\right\\llbracket', 2],
+        diag: 'diag',
+        Mat: 'Mat',
+        tr: 'tr',
+        po: ['\\!\\!\\underset{{#1}}{\\;{o}\\!}', 1],
+        gO: ['\\!\\!\\underset{{#1}}{\\;\\Oo\\!}', 1],
+        simu: ['\\underset{{#1}}{\\sim}', 1],
+        limu: ['\\underset{{#1}}{\\lim}', 1],
+        tou: ['\\underset{{#1}}{\\longrightarrow}', 1],
+        Var: '\\mathbb V',
+        labelitemi: '$\\bullet$',
+        labelitemii: '$\\blacktriangleright$',
+        labelitemiii: '$\\circ$',
+        labelitemiv: '$\\triangleright$',
+        ogfg: ['\\og~{#1}~\\fg', 1],
+        facile: '\\faBicycle{}',
+        moyen: '\\faPlane{}',
+        dur: '\\faRocket{}',
+        doublebarre: '\\faBullseye{}',
+        cible: '\\faBullseye{}',
+        tlong: '\\faHourglassEnd{}\\ ',
+        court: '\\faHourglassO{}\\ ',
+        ordi: '\\faLaptop{}\\ ',
+        ecrit: '\\faPencil{}\\ ',
+        llsi: '\\faWrench{}\\ ',
+        llpc: '\\faFlask{}\\ ',
+        attention: '\\faWarning{}\\ ',
+        methode: '\\faCube{}\\ ',
+        Pp: '\\mathcal{P}',
+        Qq: '\\mathcal{Q}',
+        Rr: '\\mathcal{R}',
+        Ss: '\\mathcal{S}',
+        Tt: '\\mathcal{T}',
+        Uu: '\\mathcal{U}',
+        Gl: '\\mathcal{G}\\ell',
+        Sf: '\\mathfrak{S}',
+        Al: '\\mathfrak{A}',
+        dd: 'd\\!',
+        dbarre: '\\bar{\\partial}',
+        ddbarre: '\\partial\\!\\bar{\\partial}',
+        dpp: ['\\dfrac{\\partial{#1}}{\\partial{#2}}', 2],
+        dppp: ['\\dfrac{\\partial^2{#1}}{\\partial{#2}\\partial{#3}}',  3],
+        dpppp: ['\\dfrac{\\partial^3{#1}}{\\partial{#2}\\partial{#3}\\partial{#4}}', 4],
+        dpppP: ['\\dfrac{\\partial^3{#1}}{\\partial{#2} {#3} {#4}}', 4],
+        Div: 'div',
+        demi: '\\frac{1}{2}',
+        ssi: '\\; \\textbf{ssi} \\;',
+        Vv: '| \\! | \\! |',
+        Nld: ['\\left\\Vert {#1} \\right\\Vert', 1],
+        NLd: ['\\left\\Vert {#1} \\right\\Vert_{L^2}', 1],
+        sh: 'sh',
+        ch: 'ch',
+        Id: 'Id',
+        id: 'id',
+        llbracket: '[\\![',
+        rrbracket: ']\\!]',
+        name: ['{#1}\\textsc{ {#2}}', 2],
+        ens: ['\\left\\lbrace {#1} \\; \\middle| \\; {#2} \\right\\rbrace ', 2],
+        ensp: ['\\left\\lbrace {#1} \\; : \\; {#2} \\right\\rbrace ', 2],
+        ensva: ['{\\color{DarkBlue}\\left\\lbrace \\color{black} {#1} \\color{DarkBlue}\\right\\rbrace}', 1],
+        dessous: ['\\underset{{#1}}{\\underbrace{{#2}}}', 2]
+      }
+      }
+     };
+    
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,9 +135,11 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="quiz-wrap">
+<article>
+<!--div id="quiz-wrap"-->
 
   <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+    <div id="home">
   <header>
     <div class="tag">QCM Bayesien &middot; </div>
     
@@ -37,6 +150,18 @@
       Le calcul des notes récompense l'honnêteté dans l'incertitude : la meilleure stratégie est toujours de donner sincèrement la valeur de vos croyances.
     </p>
   </header>
+    <div class="topic-grid" id="topicGrid">
+      <!-- Filled dynamically by quiz.js -->
+    </div>
+  </div>
+    
+  <div id="quiz" style="display:none">
+
+    <!-- Back button + topic title -->
+    <div class="quiz-header">
+      <button class="btn-back" onclick="backToHome()">&#8592; Thèmes</button>
+      <span class="quiz-topic-title" id="quizTopicTitle"></span>
+    </div>
 
   <!-- ── Progress bar + live score ──────────────────────────────────────────── -->
   <div class="top-bar">
@@ -66,10 +191,14 @@
     </div>
     <div class="result-title" id="resultTitle">—</div>
     <div class="result-sub"   id="resultSub">—</div>
-    <button class="btn-restart" onclick="restartQuiz()">↺ Réessayer</button>
+      <div class="result-actions">
+        <button class="btn-restart" onclick="backToHome()">&#8592; Tous le thèmes</button>
+        <button class="btn-restart"   onclick="retryTopic()">↺ Réessayer ce thème</button>
+      </div>
   </div>
 
-</div><!-- /.quiz-wrap -->
+<!--/div--><!-- /.quiz-wrap -->
+</article>
 
 <script src="quiz.js"></script>
 </body>
