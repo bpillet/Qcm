@@ -6,6 +6,19 @@
 
 
 /* ── SCORING FORMULA ────────────────────────────────────────────────────────── */
+
+/* ── SLIDER BOUNDS ────────────────────────────────────
+   0% and 100% are forbidden: a Bayesian agent should never be absolutely
+   certain (Cromwell's rule). For n answers the max any single answer can
+   hold is 1 − (n−1)×MIN, so that the others can each have at least MIN.
+──────────────────────────────────────────────────── */
+const SLIDER_MIN = 0.01;   // 1 %
+const SLIDER_MAX = 0.99;   // 99 %
+
+function sliderMax(n) { return 1 - (n - 1) * SLIDER_MIN; }
+
+
+
 /*   Swap this single function to change the scoring rule.
 
    Arguments:
@@ -31,11 +44,11 @@
    *expected* score is to report your genuine beliefs.
 ────────────────────────────────────────────────────────────────────────────── */
 function scoringRule(p_correct, n) {
-  const epsilon  = 0.001;                    // avoid log(0)
-  const p        = Math.max(p_correct, epsilon);
-  const baseline = Math.log(1 / n);         // score of a uniform guess
-  const best     = Math.log(1);             // = 0, score of a perfect answer
-  const raw      = Math.log(p);
+  //const epsilon  = 0.001;                    // avoid log(0)
+  //const p        = Math.max(p_correct, epsilon);
+  const baseline = Math.log(1 / n);            // score of a uniform guess
+  const best     = Math.log(sliderMax(n));             // = 0, score of a perfect answer
+  const raw      = Math.log(p_correct);
 
   // Linear map: baseline → 0, best → 100
   return ((raw - baseline) / (best - baseline)) * 100;
@@ -87,13 +100,23 @@ function showHome() {
 
 /* ── RENDER ──────────────────────────────────────────────────────────────────── */
 function startTopic(ti) {
-  questions  = allTopics[ti].questions;
+  to = allTopics[ti]
+  questions  = to.questions;
   answered   = 0;
   totalScore = 0;
 
   document.getElementById('quizTopicTitle').textContent = allTopics[ti].title;
   document.getElementById('resultPanel').classList.remove('show');
 
+  const enonce = document.getElementById('enonce');
+  if (to.texte != '') {
+      enonce.innerHTML = `${to.texte}`;
+  } else {
+      enonce.innerHTML= '';
+      //enonce.style.display = 'none';
+  }
+  typesetIfReady('#enonce');
+    
   setView('quiz');
   renderQuestions();
 }
@@ -126,7 +149,7 @@ function renderQuestions() {
     card.style.animationDelay = (qi * 0.07) + 's';
 
     card.innerHTML = `
-      <div class="question-text">${qi + 1}. ${q.text}</div>
+      <div class="question-text">${q.text}</div>
       ${isTF ? renderTrueFalse(qi) : renderSliders(qi, q)}
       <div class="slider-hint">Déplace le${n > 2 ? 's' : ''} slider${n > 2 ? 's' : ''} pour indiquer ton niveau de confiance puis confirme.</div>
       <button class="btn-confirm" onclick="confirmAnswer(${qi})">Confirmer</button>
@@ -165,7 +188,7 @@ function renderTrueFalse(qi) {
       <div class="tf-slider-row">
         <div class="tf-pct" id="pct-false-${qi}">50%</div>
         <input type="range" class="slider tf-slider" id="tf-${qi}"
-               min="0" max="100" value="50" step="1">
+               min="1" max="99" value="50" step="1">
         <div class="tf-pct" id="pct-true-${qi}">50%</div>
       </div>
       <!--<div class="tf-bar-wrap">
@@ -199,7 +222,7 @@ function renderSliders(qi, q) {
       <div class="slider-answer">${ans}</div>
       <div class="slider-track-wrap">
         <input type="range" class="slider" id="sl-${qi}-${ai}"
-               min="0" max="100" value="${Math.round(100 / n)}" step="1">
+               min="1" max="99" value="${Math.round(100 / n)}" step="1">
         <div class="slider-fill" id="fill-${qi}-${ai}"
              style="width:${Math.round(100 / n)}%"></div>
       </div>
@@ -216,7 +239,9 @@ function wireSliders(qi, n) {
 }
 
 function onSliderMove(qi, movedAi, n) {
-  const newVal  = document.getElementById(`sl-${qi}-${movedAi}`).value / 100;
+  // Clamp to [MIN, 1 − (n−1)×MIN] so all others can hold at least MIN
+  const raw  = document.getElementById(`sl-${qi}-${movedAi}`).value / 100;
+  const newVal = Math.min(Math.max(raw, SLIDER_MIN), sliderMax(n));
   const oldVals = probs[qi].slice();
   const sumOthers = oldVals.reduce((s, v, i) => i === movedAi ? s : s + v, 0);
   const remaining = 1 - newVal;
@@ -229,6 +254,8 @@ function onSliderMove(qi, movedAi, n) {
     probs[qi][ai] = sumOthers > 0
       ? (oldVals[ai] / sumOthers) * remaining
       : remaining / (n - 1);
+    // Ensure no slider falls below MIN
+    probs[qi][ai] = Math.max(probs[qi][ai], SLIDER_MIN);
   }
 
   // Re-normalise to fix floating-point drift
@@ -305,7 +332,7 @@ function updateProgress() {
   const pct_ = questions.length > 0 ? answered / questions.length : 0;
   document.getElementById('progressBar').style.width = (pct_ * 100) + '%';
   document.getElementById('progressLabel').textContent =
-    `${answered} / ${questions.length} confirmed`;
+    `${answered} / ${questions.length} confirmées`;
 }
 
 function updateScoreBar() {
@@ -341,16 +368,16 @@ function showResult() {
     `/ ${maxPts}`;
 
   const idx   = Math.min(Math.round(Math.max(0, pct_) * 4), 4);
-  const titles = ['Keep practising!', 'Good effort!', 'Well done!', 'Excellent!', 'Perfect calibration!'];
-  const subs   = [
-    'Your confidence estimates need work — review the explanations above.',
-    'Some good estimates. Aim to match your confidence to your actual knowledge.',
-    'Solid calibration overall. The log score rewards honest uncertainty.',
-    'Very well calibrated! Your stated beliefs closely matched your knowledge.',
-    'Outstanding — your confidence was perfectly aligned with your knowledge!'
-  ];
+  const titles = ['À revoir!', 'À perfectionner!', 'Très bien!', 'Excellent!', 'Parfait!'];
+  // const subs   = [
+  //   'Your confidence estimates need work — review the explanations above.',
+  //   'Some good estimates. Aim to match your confidence to your actual knowledge.',
+  //   'Solid calibration overall. The log score rewards honest uncertainty.',
+  //   'Very well calibrated! Your stated beliefs closely matched your knowledge.',
+  //   'Outstanding — your confidence was perfectly aligned with your knowledge!'
+  // ];
   document.getElementById('resultTitle').textContent = titles[idx];
-  document.getElementById('resultSub').textContent   = subs[idx];
+  //document.getElementById('resultSub').textContent   = subs[idx];
 }
 
 /* ── RESTART ─────────────────────────────────────────────────────────────────── */

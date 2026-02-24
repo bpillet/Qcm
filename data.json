@@ -1,6 +1,7 @@
 [
   {
     "title": "Fonctions",
+    "texte": "",
     "questions": [
       {
         "text": "$\\arcsin$ est définie sur $\\Iff {-1} 1$.",
@@ -28,11 +29,66 @@
         ],
         "correct": 1,
         "explanation": ""
+      },
+      {
+        "text": "$\\arccos$ est croissante sur $\\Iff {-1} 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arctan'(x) = \\dfrac 1 {1 + x^2}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "la tangente au graphe de $f$ en $x_0$ a pour équation $y = f'(x_0)(x - x_0) + f(x_0)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f$ est paire alors $f(0) = 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\tan$ est paire.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Une fonction strictement croissante est injective.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
       }
     ]
   },
   {
-    "title": "Divers",
+    "title": "Primitives",
+    "texte": "",
     "questions": [
       {
         "text": "$x \\mapsto \\int_2^x \\dfrac {\\dd t}{\\ln(t)}$ est une primitive de $\\frac 1 {\\ln}$ sur $\\Ioo 2 {+\\infty}$.",
@@ -44,7 +100,103 @@
         "explanation": ""
       },
       {
-        "text": "Le groupe des racines \\(n\\)-èmes de l'unité est $\\ens{z \\in \\C}{ \\vert z \\vert = 1}$.",
+        "text": "$x \\mapsto x\\ln(x) - x$ est une primitive de $\\ln$ sur $\\R^{+*}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "EDL",
+    "texte": "\n\n\nSoit $(E) : ay'' + by' + cy = f$ une équation différentielle linéaire à coefficients constants réels, ($H$) l'équation homogène associée et $(EC)$ l'équation caractéristique associée, $\\Delta$ son discriminant.\n\n",
+    "questions": [
+      {
+        "text": "$\\Sol(E) = \\ensp{y_p + h}{h \\in \\Sol(H)$} où $y_p$ est solution particulière.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$(EC)$ est une équation polynomiale de degré 2.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "($H$) a exactement $2$ solutions à valeurs dans $\\C$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $\\Delta = 0$, alors $t \\mapsto e^{\\lambda_0 t}$ et $t \\mapsto te^{\\lambda_0 t}$ sont solution de ($H$) pour un certain $\\lambda_0 \\in \\R$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $\\Delta < 0$, alors les solutions non-nulles de ($H$) changent de signe sur $\\R$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f(t) = e^t$ alors il y a une solution particulière de la forme $t \\mapsto Ke^t$ avec $K \\in \\R$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f(t) = \\cos(t)$ alors il y a une solution particulière de la forme $t \\mapsto A\\cos(t)$ avec $A \\in \\R$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f(t) = \\sin(2t)$ et $2i$ est solution de ($EC$) alors on cherchera une solution particulière de la forme $t \\mapsto At\\cos(2t) + Bt\\sin(2t)$ avec $A,B \\in \\R$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $a,b$ ou $c$ est nul, alors il y a une manière élémentaire de trouver les solutions de ($EC$).",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Les solutions homogènes sont toujours solutions de l'équation différentielle avec second membre.",
         "answers": [
           "True",
           "False"
@@ -54,6 +206,30 @@
       },
       {
         "text": "Le problème de Cauchy $y'(x) + \\sin(x)y(x) = e^x$ et $y(0) = -1$ n'a aucune solution sur $\\R$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$t \\mapsto e^{-at}$ est solution de $y'(t) + a(t)y(t) = 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Complexes",
+    "texte": "",
+    "questions": [
+      {
+        "text": "Le groupe des racines \\(n\\)-èmes de l'unité est $\\ens{z \\in \\C}{ \\vert z \\vert = 1}$.",
         "answers": [
           "True",
           "False"
@@ -89,7 +265,34 @@
         "explanation": ""
       },
       {
-        "text": "$t \\mapsto e^{-at}$ est solution de $y'(t) + a(t)y(t) = 0$.",
+        "text": "$(1 - i)^2 = -2i$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $z = x + iy$ avec $x,y \\in \\R$ et $x > 0$, alors $\\Aarg(z) = \\arctan(y/x)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\vert z - z_A \\vert$ est la distance entre les points d'affixe $z$ et $z_A$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Aarg(z + w) \\equiv \\Aarg(z) + \\Aarg(w) [2\\pi]$.",
         "answers": [
           "True",
           "False"
@@ -97,6 +300,48 @@
         "correct": 1,
         "explanation": ""
       },
+      {
+        "text": "$\\vert zw \\vert = \\vert z \\vert \\times \\vert w \\vert$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$2\\cos(t) = e^{it} + e^{-it}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$2i\\Im(z) = z - \\bar z$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Im(z)$ est un nombre réel.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Divers",
+    "texte": "",
+    "questions": [
       {
         "text": "$\\displaystyle (a + b)^n = \\sum_{k = 0}^n \\binom n k a^k b^n$",
         "answers": [
@@ -116,21 +361,22 @@
         "explanation": ""
       },
       {
-        "text": "Les solutions homogènes sont toujours solutions de l'équation différentielle avec second membre.",
+        "text": "La proposition $\\Pp$ est /héréditaire/ si $\\forall n \\in \\N, \\Pp(n) \\Rightarrow \\Pp(n+1)$.",
         "answers": [
           "True",
           "False"
         ],
-        "correct": 1,
+        "correct": 0,
         "explanation": ""
       }
     ]
   },
   {
     "title": "Géométrie 3D",
+    "texte": "",
     "questions": [
       {
-        "text": "$\\ov u$ a pour coordonnées $(\\alpha, \\beta, \\gamma)$ \\ssi $\\ov u = \\alpha \\iv + \\beta \\jv + \\gamma \\ov k$.",
+        "text": "$\\ov u$ a pour coordonnées $(\\alpha, \\beta, \\gamma) \\ssi \\ov u = \\alpha \\iv + \\beta \\jv + \\gamma \\ov k$.",
         "answers": [
           "True",
           "False"
@@ -217,6 +463,462 @@
           "False"
         ],
         "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Le projeté orthogonal d'un point de l'espace sur une droite existe toujours.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Une droite dans l'espace a une équation de la forme $ax + by + cz = d$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Dérivées",
+    "texte": "\n\nSoit $u$ une fonction dérivable sur $\\R$ et à valeurs dans $\\Ioo 0 {\\frac \\pi 2}$.\n\n",
+    "questions": [
+      {
+        "text": "$\\displaystyle (\\cos(u))' = -\\sin(u)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle (\\sin(u))' = \\cos(u)u'$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle (\\ln(u))' = \\frac {\\ln(u)}{u'}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle \\left(e^u\\right)' = e^{u'}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle (\\tan(u))' = \\left(1 + \\tan(u)\\times \\tan(u)\\right) \\times u'$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle \\lim_{\\underset{x \\neq \\pi}x \\to \\pi} \\dfrac {\\cos(x) - \\cos(\\pi)}{x - \\pi} = 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle \\left(\\sqrt u\\right)' = \\dfrac {2u'} {\\sqrt u}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\displaystyle x \\mapsto \\sqrt x$ n'est pas dérivable en $0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\dfrac {\\dd \\left(\\frac 1 x\\right)}{\\dd x} = -\\dfrac 1 {x^2}$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$(u^n)' = nu^{n - 1}u'$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Une fonction dont la dérivée est nulle sur $\\R^*$ est forcément constante.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Sommes",
+    "texte": "",
+    "questions": [
+      {
+        "text": "$\\displaystyle (a + b)^n = \\sum_{k = 0}^n \\binom n k a^k b^n$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\sum_{k = 0}^n k = \\dfrac {n(n+1)}2$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Les changements d'indices de sommes sont forcément de la forme $k' = k + n_0$ ou $k' = n_0 - k$ pour $n_0 \\in \\Z$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\n\\sum_{k = 1}^n q^k = \\dfrac {1-q^{n + 1}} {1 - q}\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Systèmes-Matrices",
+    "texte": "\n\n\nSoient $A \\in \\Mm_{n,p}(\\R)$, $B \\in \\Mm_{q,r}(\\R)$ et $M,N \\in \\Mm_n(\\R)$.\n\n",
+    "questions": [
+      {
+        "text": "$\\Mm_{n,p}(\\K)$ est l'ensemble des matrices à $p$ colonnes et $n$ lignes.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Les variables qui n'ont pas de pivot s'appellent /variables auxiliaires/.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "On ne peut pas avoir de ligne de $0$ sous forme échelonnée.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "On peut ne pas avoir de ligne de $0$ sous forme échelonnée.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Une matrice inversible est toujours carrée.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$AB$ existe si et seulement si $q = p$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "L'inverse d'une matrice inversible est inversible.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\left(M + N\\right)^n = \\sum_{k = 0}^n \\binom n k M^k N^{n - k}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$A + B$ existe si et seulement si $n = q$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $p = n$ alors $AM = MA$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Dénombrement",
+    "texte": "\n\nSoit $E$ un ensemble à $n$ éléments.\n\n",
+    "questions": [
+      {
+        "text": "Le nombre de parties de $E$ est $n^2$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Le cardinal d'une partie à $p$ éléments de $E$ est $\\binom n p$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "L'ensemble des \\(p\\)-liste d'éléments distincts de $E$ est $\\frac {n!} {(n - p)!}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Il y a $n!$ façons d'ordonner les éléments de $E$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Un \\(p\\)-uplet est un ensemble à $p$ éléments.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Suites",
+    "texte": "\n\nSoient $\\beta,\\gamma \\in \\R$,\n\\[\n\\tag{\\star}\\label{eq} \\forall n \\in \\N, u_{n + 2} = \\beta u_{n + 1} + \\gamma u_n.\n\\]\net $P(X) = 0$ son équation caractéristique.\n# , $\\Delta$ son discriminant.\n\n",
+    "questions": [
+      {
+        "text": "Une suite géométrique tend toujours vers $\\pm \\infty$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $(u_n)_n$ est arithmétique de raison $a$, alors $\\forall n \\in \\N, u_n = u_0 + an$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "La borne supérieure de $A$ est un élément de $A$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Le minimum de $A$ est un minorant qui est un élément de $A$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $\\left(u_n\\right)_n$ est arithmético-géométrique et $\\ell$ est son point fixe alors $\\left(u_n - \\ell\\right)_n$ est géométrique.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$P(X) = X^2 - \\beta X - \\gamma$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $P(\\lambda) = 0$, alors $\\left(\\lambda^n\\right)_n$ et $\\left(n\\lambda^n\\right)_n$ sont solution de \\eqref{eq}.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$(u_n)_n$ est positive /à partir d'un certain rang/ si $\\forall n \\in \\N, \\exists m \\geq n, u_{m} \\geq 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Suites bis",
+    "texte": "\n\nSoit $(u_n)_n$ une suite convergeant vers $\\ell \\in \\R$.\n\n",
+    "questions": [
+      {
+        "text": "À partir d'un certain rang, toutes les suites convergent.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\forall \\varepsilon > 0, \\exists n_0 \\in \\N, \\forall n \\geq n_0, \\ell - \\varepsilon \\leq u_n \\leq l + \\varepsilon$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Une suite bornée à partir d'un certain rang est bornée.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Une suite /croissante à partir d'un certain rang/ est croissante.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Probabilités",
+    "texte": "",
+    "questions": [
+      {
+        "text": "Un /évènement/ est un élément de l'/univers/ $\\Omega$ décrivant une /expérience aléatoire/.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
         "explanation": ""
       }
     ]

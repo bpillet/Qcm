@@ -151,73 +151,90 @@
 <body>
 <article>
   <!-- ── Header ──────────────────────────────────────────-->
-  <div id="home">
-    <header>
-      <div class="tag">QCM Bayesien &middot;
-        <a class="btn-about" href="explique.html">Comment ça marche ?</a></div>
-      
-      <h1>Évaluer sa <span>confiance</span> en ses connaissances. </h1>
-      
-      <p class="subtitle">
-        Ne choissez pas seulement une réponse ; exprimez <em>à quel degré</em> vous êtes confiant en votre réponse.<br>
-        Le calcul des notes récompense l'honnêteté dans l'incertitude : la meilleure stratégie est toujours de donner sincèrement la valeur de vos croyances.
-      </p>
-    </header>
-    <nav class="topic-grid" id="topicGrid">
-      <!-- Filled dynamically by quiz.js -->
-    </nav>
+  
+    
+  <div class="quiz-header">
+    <a class="btn-back" href="index.html">← Quiz</a>
+    <span class="quiz-topic-title">Comment est-ce que ça marche ?</span>
   </div>
+  <article class="about-body">
+    <section class="about-section">
+      <h2>Exprimer un degré ce certitude en probabilité</h2>
+      <p>Plutôt que de simplement choisir une réponse, vous proposez une <strong>probabilité</strong> à chaque solution (un nombre qui reflète à quel point vous pensez que le résultat est correct) .</p>
+      <p>Pour une question Vrai/Faux un seul curseur suffit : il faut le déplacer vers la droite
+      si vous pensez que c'est vrai, vers la gauche si vous pensez que c'est faux,
+      et le laisser proche du milieu (50%) si vous n'avez aucune idée.</p>
+    </section>
     
-  <div id="quiz" style="display:none">
-
-    <!-- Back button + topic title -->
-    <div class="quiz-header">
-      <button class="btn-back" onclick="backToHome()">&#8592; Thèmes</button>
-      <span class="quiz-topic-title" id="quizTopicTitle"></span>
-    </div>
+    <section class="about-section">
+      <h2>Pourquoi pas 0% ou 100%?</h2>
+      <p>Ces quiz appliquent un principe parfois appelé <strong>Cromwell's rule</strong>,
+      d'après le plaidoyer d'Oliver Cromwell: <em>"I beseech you, think it possible you may be mistaken."</em></p>
+      <p>Attribuer 100% à une croyance signifie qu'aucune preuve, quelle qu'elle soit, ne pourra vous faire changer d'avis (ce qui est, peut-être, la définition de la bêtise). Les curseurs vont donc de seulement de <strong>1% à 99%</strong>.</p>
+    </section>
     
-    <!-- ── Progress bar + live score ───────────────────────────────── -->
-    <div class="top-bar">
-      <span id="progressLabel">0 / … confirmé</span>
-      <span class="live-score-label">Score: <strong id="liveScore">— pts</strong></span>
-    </div>
-    <div class="progress-bar-wrap">
-      <div class="progress-bar" id="progressBar" style="width:0%"></div>
-    </div>
+    <section class="about-section">
+      <h2>Probabilités et paris</h2>
+      <p>Les cotes de paris sont plus intuitives que les probabilités.
+      Si vous croyez qu'un évènement a une probabilité $p$, vous êtes prêts à parier $p$ contre $(1 - p)$ qu'il va se produire (en cas de victoire vous gagnez $1 - p$, en cas de défaite vous perdez $p$).</p>
+      <div class="odds-table-wrap">
+        <table class="odds-table">
+          <thead><tr><th>Probabilité</th><th>Pari</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>1%</td>  <td>1 contre 99</td> <td>Impossible</td></tr>
+            <tr><td>10%</td> <td>1 contre 9</td>  <td>Improbable</td></tr>
+            <tr><td>25%</td> <td>1 contre 3</td>  <td>Suspect</td></tr>
+            <tr class="row-mid"><td>50%</td> <td>1 contre 1</td>  <td>Aucune idée — #pilouface</td></tr>
+            <tr><td>75%</td> <td>3 contre 1</td>  <td>Crédible</td></tr>
+            <tr><td>90%</td> <td>9 contre 1</td>  <td>Vraisemblable</td></tr>
+            <tr><td>99%</td> <td>99 contre 1</td> <td>Certain</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Les cotes de paris se composent naturellement via le théorème de Bayes: si votre pari <em>a priori</em> est $3$ contre $1$ et qu'un évènement se produit qui avait 2 fois plus de chances de se produire dans le cas qui vous est favorable et 2 fois moins de chances de se produire dans le cas qui vous est défavorable, votre croyance <em>a posteriori</em> a une cote de $12$ contre $1$, i.e. une probabilité $\frac{12}{13}$.</p>
+    </section>
     
-    <!-- ── Énoncé ─────────────────────────────────────────── -->
-    <div id="enonce">
-      <!-- To be filled by quiz.js -->
-    </div>
-      
-    <!-- ── Questions (filled dynamically by quiz.js) ─────────────────────-->
-    <div id="questionsContainer"></div>
-
-    <!-- ── Result panel ──────────────────────────────────── -->
-    <div class="result-panel" id="resultPanel">
-      <div class="score-ring">
-        <svg viewBox="0 0 110 110" width="120" height="120">
-          <circle class="ring-bg"   cx="55" cy="55" r="46"/>
-          <circle class="ring-fill" id="ringFill" cx="55" cy="55" r="46"
-                  stroke-dasharray="289"
-                  stroke-dashoffset="289"/>
-        </svg>
-        <div class="score-num-wrap">
-          <span class="score-num" id="scoreNum">0</span>
-          <span class="score-max" id="scoreMax">/ 0 pts</span>
+    <section class="about-section">
+      <h2>Le calcul du score</h2>
+      <p>Chaque question est notée via la <strong>règle logarithmique</strong>, qui a la propiété d'être
+      <em>propre</em>: la seule stratégie qui maximise l'espérance de votre score est de répondre vos croyances sincères. Exagérer (ou minimiser) le degré de confiance ne sert à rien, ça ne fait que diminuer la note.</p>
+      <p>Si la bonne réponse reçoit la probabilité $p$ et qu'il y a $n$ réponses:</p>
+      \[
+      \text{score}(p,n) = \frac{\ln p - \ln\tfrac{1}{n}}{\ln\tfrac {99}{100}-\ln\tfrac{1}{n}} \times 100
+      \]
+      <p>Valeurs clés pour une question Vrai/Faux ($n = 2$):</p>
+      <div class="score-examples">
+        <div class="score-ex">
+          <span class="score-ex-pct">1%</span>
+          <span class="score-ex-label">sur la bonne réponse</span>
+          <span class="pts pts-neg">−573 pts</span>
+        </div>
+        <div class="score-ex">
+          <span class="score-ex-pct">50%</span>
+          <span class="score-ex-label">uniforme (aucune information)</span>
+          <span class="pts" style="background:rgba(255,255,255,0.06);color:var(--muted)">0 pts</span>
+        </div>
+        <div class="score-ex">
+          <span class="score-ex-pct">75%</span>
+          <span class="score-ex-label">sur la bonne réponse</span>
+          <span class="pts pts-pos">+59 pts</span>
+        </div>
+        <div class="score-ex">
+          <span class="score-ex-pct">99%</span>
+          <span class="score-ex-label">sur la bonne réponse</span>
+          <span class="pts pts-pos">+100 pts</span>
         </div>
       </div>
-      <div class="result-title" id="resultTitle">—</div>
-      <div class="result-sub"   id="resultSub">—</div>
-      <div class="result-actions">
-        <button class="btn-restart" onclick="backToHome()">&#8592; Tous le thèmes</button>
-        <button class="btn-restart"   onclick="retryTopic()">↺ Réessayer ce thème</button>
-      </div>
-    </div>
-      
-  </div>
+      <p>Un score de 0 n'est <em>pas</em> neutre (ça signifie que vous n'avez apporté aucune information, autant tirer à pile ou face) : le cours est à revoir. Les scores négatifs proviennent d'un surplus de confiance dans une réponse erronée ; si il y en a une étudiez attentivement l'explication pour comprendre l'erreur et mémoriser la bonne réponse.</p>
+    </section>
+    
+    <section class="about-section">
+      <h2>Conseil pratique</h2>
+      <p>Avant de placer le curseur, posez-vous la question: <em>"Si j'avais ces cotes, est-ce que je prendrais le pari ?"</em>
+      Mettre 90% signifie que vous paririez €9 pour en gagner €1. Si ça vous semble trop ambitieux, votre niveau de confiance est en dessous de 90%.</p>
+      <p>Aller vers les 50% c'est reconnaître que vous ne connaissez pas votre cours sur ce point (une réponse qui n'apporte aucune information vaut 0 points). Exprimez ce que vous croyez sincèrement, les notes ne sont pas enregistrées et personne ne vous réclamera les 284€ pariés.</p>
+    </section>
+  </article>
 </article>
-
-<script src="quiz.js"></script>
 </body>
 </html>

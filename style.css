@@ -79,7 +79,7 @@ header { margin-bottom: 2rem; }
 h1 {
   font-family: 'Syne', sans-serif;
   font-size: clamp(1.8rem, 5vw, 2.8rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
 }
 h1 span { color: var(--accent); }
@@ -136,7 +136,7 @@ h1 span { color: var(--accent); }
   top: -0.5rem; right: 1.5rem;
   font-family: 'Syne', sans-serif;
   font-size: 5rem;
-  font-weight: 800;
+  font-weight: 700;
   color: rgba(255,255,255,0.025);
   line-height: 1;
   pointer-events: none;
@@ -395,7 +395,7 @@ input[type=range].tf-slider { flex: 1; }
 .pts {
   font-family: 'Syne', sans-serif;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   padding: 0.2rem 0.7rem;
   border-radius: 2rem;
 }
@@ -452,7 +452,7 @@ input[type=range].tf-slider { flex: 1; }
 .score-num {
   font-family: 'Syne', sans-serif;
   font-size: 1.7rem;
-  font-weight: 800;
+  font-weight: 700;
   display: block;
 }
 
@@ -465,8 +465,16 @@ input[type=range].tf-slider { flex: 1; }
 .result-title {
   font-family: 'Syne', sans-serif;
   font-size: 1.6rem;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 0.5rem;
+}
+
+.quiz-topic-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  float: right;
 }
 
 .result-sub {
@@ -482,7 +490,7 @@ input[type=range].tf-slider { flex: 1; }
   background: var(--accent);
   color: #fff;
   font-family: 'Syne', sans-serif;
-  font-weight: 700;
+  font-weight: 650;
   font-size: 0.9rem;
   letter-spacing: 0.05em;
   padding: 0.85rem 2rem;
@@ -505,7 +513,7 @@ mjx-math{
   background: var(--accent);
   color: #fff;
   font-family: 'Syne', sans-serif;
-  font-weight: 700;
+  font-weight: 650;
   font-size: 0.9rem;
   letter-spacing: 0.05em;
   padding: 0.85rem 2rem;
@@ -517,14 +525,160 @@ mjx-math{
 }
 .topic-card{
     margin: .8em;
-    padding: 0em .3em 0em .3em
+    padding: 0em .3em 0em .3em;
+}
+.topic-card:hover{
+    margin: .8em;
+    padding: 0em .3em 0em .3em;
 }
 .topic-count{
     text-decoration: italic;
     font-size: 0.5rem;
-    display:none;
+    display:block;
 }
 .topic-num{
     display: none;
-    font-weight: 800;
+    font-weight: 700;
+}
+nav{
+    display: inline-block;
+}
+#enonce {
+    background: var(--accent2);
+    color: #000;
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    padding: .8rem 1rem .8rem 2rem;
+    margin-bottom: 1.2rem;
+    animation: slideUp 0.35s ease both;
+    position: relative;
+    overflow: hidden;
+}
+#enonce:empty{
+    display:none
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   ABOUT PAGE
+══════════════════════════════════════════════════════════════════════════════ */
+.about-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.about-section {
+  padding: 2rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1.2rem;
+  margin-bottom: 1rem;
+  animation: slideUp 0.35s ease both;
+}
+
+.about-section h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+
+.about-section p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  margin-bottom: 0.85rem;
+}
+
+.about-section p:last-child { margin-bottom: 0; }
+
+.about-section p strong { color: var(--text); }
+.about-section p em     { color: var(--accent2); font-style: italic; }
+
+/* MathJax display blocks inside about */
+.about-section .MathJax_Display,
+.about-section mjx-container[display="true"] {
+  margin: 1rem 0;
+  color: var(--text);
+}
+
+/* ── Odds table ─────────────────────────────────────────────────────────────── */
+.odds-table-wrap {
+  overflow-x: auto;
+  margin: 1.2rem 0;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.odds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.odds-table th {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.odds-table td {
+  padding: 0.65rem 1rem;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.odds-table tr:last-child td { border-bottom: none; }
+
+.odds-table td:first-child {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  color: var(--accent2);
+}
+
+.odds-table tr.row-mid td {
+  background: rgba(255,107,53,0.06);
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── Score examples ─────────────────────────────────────────────────────────── */
+.score-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1.2rem 0;
+}
+
+.score-ex {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface);
+  padding: 0.65rem 1rem;
+  border-radius: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.score-ex-pct {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  min-width: 3.5rem;
+}
+
+.score-ex-label {
+  flex: 1;
+  font-size: 0.83rem;
+  color: var(--muted);
 }

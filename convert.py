@@ -6,7 +6,6 @@ Usage:  python convert.py quiz.org          (prints JSON to stdout)
 
 Expected Org structure
 ──────────────────────
-
 """
 
 
@@ -16,10 +15,11 @@ import sys
 import argparse
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+# A ** topic heading tagged :Cuise:
+RE_TOPIC = re.compile(r'^\*{2} (.+):Cuise:.*$', re.MULTILINE)
 
-
-# A ** topic heading (exactly two stars)
-RE_TOPIC = re.compile(r'^\*{2} ([^\n]+):Cuise:[^\n]*$', re.MULTILINE)
+# Any * or ** heading (used to close a topic block early)
+RE_SECTION = re.compile(r'^\*{1,2} ', re.MULTILINE)
 
 # Matches a *** Question heading with a tag (:TF: or :Mult:)
 # Handles arbitrary whitespace between the heading text and the tag.
@@ -59,11 +59,15 @@ def parse_question(block, idx_for_warnings):
         return None
 
     # :CORRECT:
-    correct_m = re.search(r':CORRECT:\s*(\d+)', block)
-    if not correct_m:
-        print(f"⚠️  Question {idx_for_warnings}: no :CORRECT: — defaulting to 0.",
+    correct_m = re.search(r':CORRECT:\s*(V|F)', block)
+    if correct_m:
+        val = correct_m.group(1)
+        correct = 0 if val == 'V' else 1
+    else:
+        print(f"⚠️  Question {idx_for_warnings}: no :CORRECT: — defaulting to 0 (True).",
               file=sys.stderr)
-    correct = int(correct_m.group(1)) if correct_m else 0
+        correct = 0
+
 
     # Question text: between :END: and first **** sub-heading
     end_prop_m  = re.search(r':END:', block)
@@ -85,7 +89,7 @@ def parse_question(block, idx_for_warnings):
                    for a in re.findall(r'^\s*-\s+(.+)', raw, re.MULTILINE)]
 
     # Explanation
-    explanation = find_subheading(block, 'Explanation') or ''
+    explanation = find_subheading(block, 'Explications') or ''
 
     return {
         "text":        question_text,
@@ -107,7 +111,6 @@ def parse(path):
 
     topics = []
     q_counter = 0
-
     for t_idx, t_m in enumerate(topic_matches):
         # Raw title: strip org tags like :noexport: and extra whitespace
         raw_title = t_m.group(1)
@@ -117,10 +120,20 @@ def parse(path):
         if ':noexport:' in raw_title.lower():
             continue
 
-        # Text of this topic: from after its heading to before the next ** heading
         t_start = t_m.end()
-        t_end   = topic_matches[t_idx + 1].start() \
-                  if t_idx + 1 < len(topic_matches) else len(text)
+
+        # Candidate 1: start of the next :Cuise: topic
+        next_topic = topic_matches[t_idx + 1].start() \
+            if t_idx + 1 < len(topic_matches) else len(text)
+
+        # Candidate 2: first * or ** heading after t_start (that isn't this one)
+        next_section_m = RE_SECTION.search(text, t_start)
+        next_section = next_section_m.start() \
+            if next_section_m else len(text)
+
+        # Take whichever boundary comes first
+        t_end = min(next_topic, next_section)
+
         topic_block = text[t_start:t_end]
 
         # Find all *** Question blocks within this topic
@@ -139,7 +152,10 @@ def parse(path):
                 questions.append(q)
 
         if questions:
-            topics.append({"title": title, "questions": questions})
+            enonce = topic_block[:q_matches[0].start()]
+            if len(enonce.split()) == 0:
+                enonce = ''
+            topics.append({"title": title, "texte": enonce, "questions": questions})
         else:
             print(f"⚠️  Topic '{title}' has no valid questions — omitted.",
                   file=sys.stderr)

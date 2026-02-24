@@ -86,6 +86,19 @@ file:quiz.js
 
 #+name: scoring-rule 
 #+begin_src js :tangle no
+
+/* ── SLIDER BOUNDS ────────────────────────────────────
+   0% and 100% are forbidden: a Bayesian agent should never be absolutely
+   certain (Cromwell's rule). For n answers the max any single answer can
+   hold is 1 − (n−1)×MIN, so that the others can each have at least MIN.
+──────────────────────────────────────────────────── */
+const SLIDER_MIN = 0.01;   // 1 %
+const SLIDER_MAX = 0.99;   // 99 %
+
+function sliderMax(n) { return 1 - (n - 1) * SLIDER_MIN; }
+
+
+
 /*   Swap this single function to change the scoring rule.
 
    Arguments:
@@ -108,14 +121,14 @@ file:quiz.js
      • Overconfident and wrong   → negative pts (can go very low)
 
    This is a PROPER scoring rule: the only strategy that maximises your
-   *expected* score is to report your genuine beliefs.
+   ,*expected* score is to report your genuine beliefs.
 ────────────────────────────────────────────────────────────────────────────── */
 function scoringRule(p_correct, n) {
-  const epsilon  = 0.001;                    // avoid log(0)
-  const p        = Math.max(p_correct, epsilon);
-  const baseline = Math.log(1 / n);         // score of a uniform guess
-  const best     = Math.log(1);             // = 0, score of a perfect answer
-  const raw      = Math.log(p);
+  //const epsilon  = 0.001;                    // avoid log(0)
+  //const p        = Math.max(p_correct, epsilon);
+  const baseline = Math.log(1 / n);            // score of a uniform guess
+  const best     = Math.log(sliderMax(n));             // = 0, score of a perfect answer
+  const raw      = Math.log(p_correct);
 
   // Linear map: baseline → 0, best → 100
   return ((raw - baseline) / (best - baseline)) * 100;
@@ -174,13 +187,23 @@ function showHome() {
 #+name: render
 #+begin_src js :tangle no
 function startTopic(ti) {
-  questions  = allTopics[ti].questions;
+  to = allTopics[ti]
+  questions  = to.questions;
   answered   = 0;
   totalScore = 0;
 
   document.getElementById('quizTopicTitle').textContent = allTopics[ti].title;
   document.getElementById('resultPanel').classList.remove('show');
 
+  const enonce = document.getElementById('enonce');
+  if (to.texte != '') {
+      enonce.innerHTML = `${to.texte}`;
+  } else {
+      enonce.innerHTML= '';
+      //enonce.style.display = 'none';
+  }
+  typesetIfReady('#enonce');
+    
   setView('quiz');
   renderQuestions();
 }
@@ -213,7 +236,7 @@ function renderQuestions() {
     card.style.animationDelay = (qi * 0.07) + 's';
 
     card.innerHTML = `
-      <div class="question-text">${qi + 1}. ${q.text}</div>
+      <div class="question-text">${q.text}</div>
       ${isTF ? renderTrueFalse(qi) : renderSliders(qi, q)}
       <div class="slider-hint">Déplace le${n > 2 ? 's' : ''} slider${n > 2 ? 's' : ''} pour indiquer ton niveau de confiance puis confirme.</div>
       <button class="btn-confirm" onclick="confirmAnswer(${qi})">Confirmer</button>
@@ -252,7 +275,7 @@ function renderTrueFalse(qi) {
       <div class="tf-slider-row">
         <div class="tf-pct" id="pct-false-${qi}">50%</div>
         <input type="range" class="slider tf-slider" id="tf-${qi}"
-               min="0" max="100" value="50" step="1">
+               min="1" max="99" value="50" step="1">
         <div class="tf-pct" id="pct-true-${qi}">50%</div>
       </div>
       <!--<div class="tf-bar-wrap">
@@ -285,7 +308,7 @@ function renderSliders(qi, q) {
       <div class="slider-answer">${ans}</div>
       <div class="slider-track-wrap">
         <input type="range" class="slider" id="sl-${qi}-${ai}"
-               min="0" max="100" value="${Math.round(100 / n)}" step="1">
+               min="1" max="99" value="${Math.round(100 / n)}" step="1">
         <div class="slider-fill" id="fill-${qi}-${ai}"
              style="width:${Math.round(100 / n)}%"></div>
       </div>
@@ -302,7 +325,9 @@ function wireSliders(qi, n) {
 }
 
 function onSliderMove(qi, movedAi, n) {
-  const newVal  = document.getElementById(`sl-${qi}-${movedAi}`).value / 100;
+  // Clamp to [MIN, 1 − (n−1)×MIN] so all others can hold at least MIN
+  const raw  = document.getElementById(`sl-${qi}-${movedAi}`).value / 100;
+  const newVal = Math.min(Math.max(raw, SLIDER_MIN), sliderMax(n));
   const oldVals = probs[qi].slice();
   const sumOthers = oldVals.reduce((s, v, i) => i === movedAi ? s : s + v, 0);
   const remaining = 1 - newVal;
@@ -315,6 +340,8 @@ function onSliderMove(qi, movedAi, n) {
     probs[qi][ai] = sumOthers > 0
       ? (oldVals[ai] / sumOthers) * remaining
       : remaining / (n - 1);
+    // Ensure no slider falls below MIN
+    probs[qi][ai] = Math.max(probs[qi][ai], SLIDER_MIN);
   }
 
   // Re-normalise to fix floating-point drift
@@ -394,7 +421,7 @@ function updateProgress() {
   const pct_ = questions.length > 0 ? answered / questions.length : 0;
   document.getElementById('progressBar').style.width = (pct_ * 100) + '%';
   document.getElementById('progressLabel').textContent =
-    `${answered} / ${questions.length} confirmed`;
+    `${answered} / ${questions.length} confirmées`;
 }
 
 function updateScoreBar() {
@@ -431,16 +458,16 @@ function showResult() {
     `/ ${maxPts}`;
 
   const idx   = Math.min(Math.round(Math.max(0, pct_) * 4), 4);
-  const titles = ['Keep practising!', 'Good effort!', 'Well done!', 'Excellent!', 'Perfect calibration!'];
-  const subs   = [
-    'Your confidence estimates need work — review the explanations above.',
-    'Some good estimates. Aim to match your confidence to your actual knowledge.',
-    'Solid calibration overall. The log score rewards honest uncertainty.',
-    'Very well calibrated! Your stated beliefs closely matched your knowledge.',
-    'Outstanding — your confidence was perfectly aligned with your knowledge!'
-  ];
+  const titles = ['À revoir!', 'À perfectionner!', 'Très bien!', 'Excellent!', 'Parfait!'];
+  // const subs   = [
+  //   'Your confidence estimates need work — review the explanations above.',
+  //   'Some good estimates. Aim to match your confidence to your actual knowledge.',
+  //   'Solid calibration overall. The log score rewards honest uncertainty.',
+  //   'Very well calibrated! Your stated beliefs closely matched your knowledge.',
+  //   'Outstanding — your confidence was perfectly aligned with your knowledge!'
+  // ];
   document.getElementById('resultTitle').textContent = titles[idx];
-  document.getElementById('resultSub').textContent   = subs[idx];
+  //document.getElementById('resultSub').textContent   = subs[idx];
 }
 #+end_src
 
@@ -520,12 +547,15 @@ function typesetIfReady(selector) {
 
 #+end_src
 
+
 * Html                                                 :noexport:
 :PROPERTIES:
 :header-args: :tangle index.html
 :END:
 
 (debug-on-entry 'org-babel-tangle)
+
+file:index.html
 
 
 ** Latex Macros
@@ -535,7 +565,7 @@ Issue de help:org-roam-ui-latex-macros :
 #+begin_src js :tangle no
 MathJax = {
 tex: {
-  inlineMath: [['$', '$']],
+  inlineMath: {'[+]': [['$', '$']]},
   macros: {
     ssi: '\\; \\textbf{ssi} \\;',
     N: '\\mathbb{N}',
@@ -557,6 +587,28 @@ tex: {
     U: '\\mathbb{U}',
     Z: '\\mathbb{Z}',
     R: '\\mathbb{R}',
+    Aa: '\\mathcal{A}',
+    Bb: '\\mathcal{B}',
+    Cc: '\\mathcal{C}',
+    Dd: '\\mathcal{D}',
+    Ee: '\\mathcal{E}',
+    Ff: '\\mathcal{F}',
+    Gg: '\\mathcal{G}',
+    Hh: '\\mathcal{H}',
+    Ii: '\\mathcal{I}',
+    Jj: '\\mathcal{J}',
+    Ll: '\\mathcal{L}',
+    Mm: '\\mathcal{M}',
+    Oo: '\\mathcal{O}',
+    Pp: '\\mathcal{P}',
+    Qq: '\\mathcal{Q}',
+    Rr: '\\mathcal{R}',
+    Ss: '\\mathcal{S}',
+    Tt: '\\mathcal{T}',
+    Uu: '\\mathcal{U}',
+    Gl: '\\mathcal{G}\\ell',
+    Sf: '\\mathfrak{S}',
+    Al: '\\mathfrak{A}',
     image: 'Im',
     Vect: 'Vect',
     rg: 'rg',
@@ -567,6 +619,7 @@ tex: {
     Aarg: 'arg',
     Re: '\\operatorname{Re}',
     Im: '\\operatorname{Im}',
+    Sol: '\\operatorname{Sol}',
     bool: '\\{\\text{Vrai}, \\text{Faux}\\}',
     v: ['\\begin{pmatrix}{#1} \\\\ {#2}\\end{pmatrix}', 2],
     bv: ['\\begin{bmatrix}{#1} \\\\ {#2}\\end{bmatrix}', 2],
@@ -618,15 +671,6 @@ tex: {
     llpc: '\\faFlask{}\\ ',
     attention: '\\faWarning{}\\ ',
     methode: '\\faCube{}\\ ',
-    Pp: '\\mathcal{P}',
-    Qq: '\\mathcal{Q}',
-    Rr: '\\mathcal{R}',
-    Ss: '\\mathcal{S}',
-    Tt: '\\mathcal{T}',
-    Uu: '\\mathcal{U}',
-    Gl: '\\mathcal{G}\\ell',
-    Sf: '\\mathfrak{S}',
-    Al: '\\mathfrak{A}',
     dd: 'd\\!',
     dbarre: '\\bar{\\partial}',
     ddbarre: '\\partial\\!\\bar{\\partial}',
@@ -676,7 +720,8 @@ tex: {
 
 #+name: header
 #+begin_src html :tangle no
-<div class="tag">QCM Bayesien &middot; </div>
+<div class="tag">QCM Bayesien &middot;
+  <a class="btn-about" href="explique.html">Comment ça marche ?</a></div>
 
 <h1>Évaluer sa <span>confiance</span> en ses connaissances. </h1>
 
@@ -684,6 +729,53 @@ tex: {
   Ne choissez pas seulement une réponse ; exprimez <em>à quel degré</em> vous êtes confiant en votre réponse.<br>
   Le calcul des notes récompense l'honnêteté dans l'incertitude : la meilleure stratégie est toujours de donner sincèrement la valeur de vos croyances.
 </p>
+#+end_src
+
+#+name:result
+#+begin_src html :tangle no
+<div class="result-panel" id="resultPanel">
+  <div class="score-ring">
+    <svg viewBox="0 0 110 110" width="120" height="120">
+      <circle class="ring-bg"   cx="55" cy="55" r="46"/>
+      <circle class="ring-fill" id="ringFill" cx="55" cy="55" r="46"
+              stroke-dasharray="289"
+              stroke-dashoffset="289"/>
+    </svg>
+    <div class="score-num-wrap">
+      <span class="score-num" id="scoreNum">0</span>
+      <span class="score-max" id="scoreMax">/ 0 pts</span>
+    </div>
+  </div>
+  <div class="result-title" id="resultTitle">—</div>
+  <div class="result-sub"   id="resultSub">—</div>
+  <div class="result-actions">
+    <button class="btn-restart" onclick="backToHome()">&#8592; Tous le thèmes</button>
+    <button class="btn-restart"   onclick="retryTopic()">↺ Réessayer ce thème</button>
+  </div>
+</div>
+#+end_src
+
+#+name:quiz
+#+begin_src html :tangle no
+<!-- Back button + topic title -->
+<div class="quiz-header">
+  <button class="btn-back" onclick="backToHome()">&#8592; Thèmes</button>
+  <span class="quiz-topic-title" id="quizTopicTitle"></span>
+</div>
+
+<!-- ── Progress bar + live score ───────────────────────────────── -->
+<div class="top-bar">
+  <span id="progressLabel">0 / … confirmé</span>
+  <span class="live-score-label">Score: <strong id="liveScore">— pts</strong></span>
+</div>
+<div class="progress-bar-wrap">
+  <div class="progress-bar" id="progressBar" style="width:0%"></div>
+</div>
+
+<!-- ── Énoncé ─────────────────────────────────────────── -->
+<div id="enonce">
+  <!-- To be filled by quiz.js -->
+</div>
 #+end_src
 
 #+name: main
@@ -695,64 +787,142 @@ tex: {
 </head>
 <body>
 <article>
-<!--div id="quiz-wrap"-->
-
-  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
-    <div id="home">
-  <header>
-    <<header>>
-  </header>
-    <div class="topic-grid" id="topicGrid">
+  <!-- ── Header ──────────────────────────────────────────-->
+  <div id="home">
+    <header>
+      <<header>>
+    </header>
+    <nav class="topic-grid" id="topicGrid">
       <!-- Filled dynamically by quiz.js -->
-    </div>
+    </nav>
   </div>
     
   <div id="quiz" style="display:none">
 
-    <!-- Back button + topic title -->
-    <div class="quiz-header">
-      <button class="btn-back" onclick="backToHome()">&#8592; Thèmes</button>
-      <span class="quiz-topic-title" id="quizTopicTitle"></span>
-    </div>
+    <<quiz>>
+      
+    <!-- ── Questions (filled dynamically by quiz.js) ─────────────────────-->
+    <div id="questionsContainer"></div>
 
-  <!-- ── Progress bar + live score ──────────────────────────────────────────── -->
-  <div class="top-bar">
-    <span id="progressLabel">0 / … confirmé</span>
-    <span class="live-score-label">Score: <strong id="liveScore">— pts</strong></span>
+    <!-- ── Result panel ──────────────────────────────────── -->
+    <<result>>
+      
   </div>
-  <div class="progress-bar-wrap">
-    <div class="progress-bar" id="progressBar" style="width:0%"></div>
-  </div>
-
-  <!-- ── Questions (filled dynamically by quiz.js) ──────────────────────────── -->
-  <div id="questionsContainer"></div>
-
-  <!-- ── Result panel ───────────────────────────────────────────────────────── -->
-  <div class="result-panel" id="resultPanel">
-    <div class="score-ring">
-      <svg viewBox="0 0 110 110" width="120" height="120">
-        <circle class="ring-bg"   cx="55" cy="55" r="46"/>
-        <circle class="ring-fill" id="ringFill" cx="55" cy="55" r="46"
-                stroke-dasharray="289"
-                stroke-dashoffset="289"/>
-      </svg>
-      <div class="score-num-wrap">
-        <span class="score-num" id="scoreNum">0</span>
-        <span class="score-max" id="scoreMax">/ 0 pts</span>
-      </div>
-    </div>
-    <div class="result-title" id="resultTitle">—</div>
-    <div class="result-sub"   id="resultSub">—</div>
-      <div class="result-actions">
-        <button class="btn-restart" onclick="backToHome()">&#8592; Tous le thèmes</button>
-        <button class="btn-restart"   onclick="retryTopic()">↺ Réessayer ce thème</button>
-      </div>
-  </div>
-
-<!--/div--><!-- /.quiz-wrap -->
 </article>
 
 <script src="quiz.js"></script>
+</body>
+</html>
+#+end_src
+
+
+* About : Fonctionnement                               :noexport:
+:PROPERTIES:
+:header-args: :tangle explique.html
+:END:
+
+file:explique.html
+
+#+name: explique
+#+begin_src html :tangle no
+<section class="about-section">
+  <h2>Exprimer un degré ce certitude en probabilité</h2>
+  <p>Plutôt que de simplement choisir une réponse, vous proposez une <strong>probabilité</strong> à chaque solution (un nombre qui reflète à quel point vous pensez que le résultat est correct) .</p>
+  <p>Pour une question Vrai/Faux un seul curseur suffit : il faut le déplacer vers la droite
+  si vous pensez que c'est vrai, vers la gauche si vous pensez que c'est faux,
+  et le laisser proche du milieu (50%) si vous n'avez aucune idée.</p>
+</section>
+
+<section class="about-section">
+  <h2>Pourquoi pas 0% ou 100%?</h2>
+  <p>Ces quiz appliquent un principe parfois appelé <strong>Cromwell's rule</strong>,
+  d'après le plaidoyer d'Oliver Cromwell: <em>"I beseech you, think it possible you may be mistaken."</em></p>
+  <p>Attribuer 100% à une croyance signifie qu'aucune preuve, quelle qu'elle soit, ne pourra vous faire changer d'avis (ce qui est, peut-être, la définition de la bêtise). Les curseurs vont donc de seulement de <strong>1% à 99%</strong>.</p>
+</section>
+
+<section class="about-section">
+  <h2>Probabilités et paris</h2>
+  <p>Les cotes de paris sont plus intuitives que les probabilités.
+  Si vous croyez qu'un évènement a une probabilité $p$, vous êtes prêts à parier $p$ contre $(1 - p)$ qu'il va se produire (en cas de victoire vous gagnez $1 - p$, en cas de défaite vous perdez $p$).</p>
+  <div class="odds-table-wrap">
+    <table class="odds-table">
+      <thead><tr><th>Probabilité</th><th>Pari</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>1%</td>  <td>1 contre 99</td> <td>Impossible</td></tr>
+        <tr><td>10%</td> <td>1 contre 9</td>  <td>Improbable</td></tr>
+        <tr><td>25%</td> <td>1 contre 3</td>  <td>Suspect</td></tr>
+        <tr class="row-mid"><td>50%</td> <td>1 contre 1</td>  <td>Aucune idée — #pilouface</td></tr>
+        <tr><td>75%</td> <td>3 contre 1</td>  <td>Crédible</td></tr>
+        <tr><td>90%</td> <td>9 contre 1</td>  <td>Vraisemblable</td></tr>
+        <tr><td>99%</td> <td>99 contre 1</td> <td>Certain</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Les cotes de paris se composent naturellement via le théorème de Bayes: si votre pari <em>a priori</em> est $3$ contre $1$ et qu'un évènement se produit qui avait 2 fois plus de chances de se produire dans le cas qui vous est favorable et 2 fois moins de chances de se produire dans le cas qui vous est défavorable, votre croyance <em>a posteriori</em> a une cote de $12$ contre $1$, i.e. une probabilité $\frac{12}{13}$.</p>
+</section>
+
+<section class="about-section">
+  <h2>Le calcul du score</h2>
+  <p>Chaque question est notée via la <strong>règle logarithmique</strong>, qui a la propiété d'être
+  <em>propre</em>: la seule stratégie qui maximise l'espérance de votre score est de répondre vos croyances sincères. Exagérer (ou minimiser) le degré de confiance ne sert à rien, ça ne fait que diminuer la note.</p>
+  <p>Si la bonne réponse reçoit la probabilité $p$ et qu'il y a $n$ réponses:</p>
+  \[
+  \text{score}(p,n) = \frac{\ln p - \ln\tfrac{1}{n}}{\ln\tfrac {99}{100}-\ln\tfrac{1}{n}} \times 100
+  \]
+  <p>Valeurs clés pour une question Vrai/Faux ($n = 2$):</p>
+  <div class="score-examples">
+    <div class="score-ex">
+      <span class="score-ex-pct">1%</span>
+      <span class="score-ex-label">sur la bonne réponse</span>
+      <span class="pts pts-neg">−573 pts</span>
+    </div>
+    <div class="score-ex">
+      <span class="score-ex-pct">50%</span>
+      <span class="score-ex-label">uniforme (aucune information)</span>
+      <span class="pts" style="background:rgba(255,255,255,0.06);color:var(--muted)">0 pts</span>
+    </div>
+    <div class="score-ex">
+      <span class="score-ex-pct">75%</span>
+      <span class="score-ex-label">sur la bonne réponse</span>
+      <span class="pts pts-pos">+59 pts</span>
+    </div>
+    <div class="score-ex">
+      <span class="score-ex-pct">99%</span>
+      <span class="score-ex-label">sur la bonne réponse</span>
+      <span class="pts pts-pos">+100 pts</span>
+    </div>
+  </div>
+  <p>Un score de 0 n'est <em>pas</em> neutre (ça signifie que vous n'avez apporté aucune information, autant tirer à pile ou face) : le cours est à revoir. Les scores négatifs proviennent d'un surplus de confiance dans une réponse erronée ; si il y en a une étudiez attentivement l'explication pour comprendre l'erreur et mémoriser la bonne réponse.</p>
+</section>
+
+<section class="about-section">
+  <h2>Conseil pratique</h2>
+  <p>Avant de placer le curseur, posez-vous la question: <em>"Si j'avais ces cotes, est-ce que je prendrais le pari ?"</em>
+  Mettre 90% signifie que vous paririez €9 pour en gagner €1. Si ça vous semble trop ambitieux, votre niveau de confiance est en dessous de 90%.</p>
+  <p>Aller vers les 50% c'est reconnaître que vous ne connaissez pas votre cours sur ce point (une réponse qui n'apporte aucune information vaut 0 points). Exprimez ce que vous croyez sincèrement, les notes ne sont pas enregistrées et personne ne vous réclamera les 284€ pariés.</p>
+</section>
+#+end_src
+
+#+name: main-explique
+#+begin_src html :noweb yes
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <<head>>
+</head>
+<body>
+<article>
+  <!-- ── Header ──────────────────────────────────────────-->
+  
+    
+  <div class="quiz-header">
+    <a class="btn-back" href="index.html">← Quiz</a>
+    <span class="quiz-topic-title">Comment est-ce que ça marche ?</span>
+  </div>
+  <article class="about-body">
+    <<explique>>
+  </article>
+</article>
 </body>
 </html>
 #+end_src
@@ -791,12 +961,12 @@ print(json.dumps(data, indent=2, ensure_ascii=False))
 
 ** Python V2
 :PROPERTIES:
-:header-args: :tangle convert.py
+:header-args: :tangle convert.py :session convert
 :END:
 
 file:convert.py
 
-
+# <<expected-org-structure>>
 #+name: preamble
 #+begin_src python :noweb yes
 #!/usr/bin/env python3
@@ -807,7 +977,6 @@ Usage:  python convert.py quiz.org          (prints JSON to stdout)
 
 Expected Org structure
 ──────────────────────
-<<expected-org-structure>>
 """
 
 
@@ -820,10 +989,11 @@ import argparse
 #+name: helpers
 #+begin_src python
 # ── Helpers ───────────────────────────────────────────────────────────────────
+# A ** topic heading tagged :Cuise:
+RE_TOPIC = re.compile(r'^\*{2} (.+):Cuise:.*$', re.MULTILINE)
 
-
-# A ** topic heading (exactly two stars)
-RE_TOPIC = re.compile(r'^\*{2} ([^\n]+):Cuise:[^\n]*$', re.MULTILINE)
+# Any * or ** heading (used to close a topic block early)
+RE_SECTION = re.compile(r'^\*{1,2} ', re.MULTILINE)
 
 # Matches a *** Question heading with a tag (:TF: or :Mult:)
 # Handles arbitrary whitespace between the heading text and the tag.
@@ -867,11 +1037,15 @@ def parse_question(block, idx_for_warnings):
         return None
 
     # :CORRECT:
-    correct_m = re.search(r':CORRECT:\s*(\d+)', block)
-    if not correct_m:
-        print(f"⚠️  Question {idx_for_warnings}: no :CORRECT: — defaulting to 0.",
+    correct_m = re.search(r':CORRECT:\s*(V|F)', block)
+    if correct_m:
+        val = correct_m.group(1)
+        correct = 0 if val == 'V' else 1
+    else:
+        print(f"⚠️  Question {idx_for_warnings}: no :CORRECT: — defaulting to 0 (True).",
               file=sys.stderr)
-    correct = int(correct_m.group(1)) if correct_m else 0
+        correct = 0
+
 
     # Question text: between :END: and first **** sub-heading
     end_prop_m  = re.search(r':END:', block)
@@ -893,7 +1067,7 @@ def parse_question(block, idx_for_warnings):
                    for a in re.findall(r'^\s*-\s+(.+)', raw, re.MULTILINE)]
 
     # Explanation
-    explanation = find_subheading(block, 'Explanation') or ''
+    explanation = find_subheading(block, 'Explications') or ''
 
     return {
         "text":        question_text,
@@ -915,7 +1089,6 @@ def parse(path):
 
     topics = []
     q_counter = 0
-
     for t_idx, t_m in enumerate(topic_matches):
         # Raw title: strip org tags like :noexport: and extra whitespace
         raw_title = t_m.group(1)
@@ -925,10 +1098,20 @@ def parse(path):
         if ':noexport:' in raw_title.lower():
             continue
 
-        # Text of this topic: from after its heading to before the next ** heading
         t_start = t_m.end()
-        t_end   = topic_matches[t_idx + 1].start() \
-                  if t_idx + 1 < len(topic_matches) else len(text)
+
+        # Candidate 1: start of the next :Cuise: topic
+        next_topic = topic_matches[t_idx + 1].start() \
+            if t_idx + 1 < len(topic_matches) else len(text)
+
+        # Candidate 2: first * or ** heading after t_start (that isn't this one)
+        next_section_m = RE_SECTION.search(text, t_start)
+        next_section = next_section_m.start() \
+            if next_section_m else len(text)
+
+        # Take whichever boundary comes first
+        t_end = min(next_topic, next_section)
+
         topic_block = text[t_start:t_end]
 
         # Find all *** Question blocks within this topic
@@ -947,7 +1130,10 @@ def parse(path):
                 questions.append(q)
 
         if questions:
-            topics.append({"title": title, "questions": questions})
+            enonce = topic_block[:q_matches[0].start()]
+            if len(enonce.split()) == 0:
+                enonce = ''
+            topics.append({"title": title, "texte": enonce, "questions": questions})
         else:
             print(f"⚠️  Topic '{title}' has no valid questions — omitted.",
                   file=sys.stderr)
@@ -986,12 +1172,17 @@ if __name__ == '__main__':
 
 ** Export command
 
+file:data.json
+
 #+begin_src sh
 python3 convert.py quiz.org -o data.json && echo "✓ done"
 #+end_src
 
 #+RESULTS:
 : ✓ done
+
+
+
 
 * Start server                                         :noexport:
 
@@ -1001,7 +1192,7 @@ python3 -m http.server
 
 #+RESULTS:
 
-* TODO TAF [3/10]                                      :noexport:
+* TODO TAF [5/14]                                      :noexport:
 
 - [X] Faire un dépot Git à part
 - [X] Gérer plusieurs QCM et le choix du thème
@@ -1011,108 +1202,168 @@ python3 -m http.server
 - [X] Intégrer mes macro LaTeX perso
 - [-] Améliorer le HTML
   - [ ] h2  au lieu de =<span id = 'quiz topic title'>=
-  - [ ] nav
+  - [X] nav
   - [X] article
   - [ ] sections
-- [-] Modifier l'export en json pour ne prendre en compte que les header taggués =:Cuise:=
+- [X] Modifier l'export en json pour ne prendre en compte que les header taggués =:Cuise:=
+- [ ] Corriger l'export des corrections.
 - [ ] Améliorer le CSS
-  - choix des topics
-- [ ] Convertir les anciens QCM
-  - [ ] Automatiser les traductions
-  - [ ] Ajouter des explications 
-- [ ] créer d'autres QCM
+  - [ ] choix des topics
+- [-] Convertir les anciens QCM
+  - [X] Automatiser les traductions
+  - [ ] Ajouter des explications
+- [ ] créer d'autres QCM.
+- [ ] Créer une page d'explications
+- [X] Modifier les compteurs pour être en 0 et 99.
+- [ ] Appréciations : modifier le js pour repérer les grands écarts croyance-vérité et utiliser les appréciations pour le signaler.
 - [ ] Vérifier si c'est ok sur portable
-- [ ] Créer une page d'explication
-- [ ] Mettre sur le site de la TSI1
+- [ ] Mettre sur le site de la TSI1é
 
 * QCM par thèmes
 
 file:~/Git/tsi/QCM/
 
-** MCQ : example                                       :noexport:
-
-Let $I \subseteq \R$ be a non-empty open interval.
-
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Is $\left(\sum_{k} \frac 1 k\right)_k$ convergent ?
-
-**** Explanation
-
-No : forall all $n \in \N$, we have $\sum_{k = 2^n}^{2^{n + 1} - 1} \frac 1 k > \sum_{k = 2^n}^{2^{n + 1} - 1} \frac 1 {2^{n + 1}} = \frac 1 2$. Therefore $\sum_{k = 1}^{2^{n + 1}} \frac 1 k > \frac n 2$ and thus diverges to $+\infty$ as $n \to +\infty$.
-
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  0
-:END:
-
-Is $\left(\sum_{k} \frac {(-1)^k} k\right)_k$ convergent ?
-
-**** Explanation
-
-Yes : it satisfies the criterium for alternated series.
-
-*** Question                                               :Mult:
-:PROPERTIES:
-:CORRECT:  3
-:END:
-
-What is the value of $\cos\left(\frac \pi 8\right)$
-
-**** Answers
-
-- $\frac {\sqrt 2} 4$
-- $\frac {\sqrt 8} 4$
-- $\frac {\sqrt{2 - \sqrt 2 }} 2$
-- $\frac {\sqrt{2 + \sqrt 2}} 2$
-
-**** Explanation
-
-$\frac {\sqrt 2} 2 = \cos\left(\frac \pi 4\right) = \cos\left(2 \times \frac \pi 8\right) = 2\cos^2\left(\frac \pi 8\right) - 1$
-Therefore $\cos^2\left(\frac \pi 8\right) = \frac 1 2\left(\frac {\sqrt 2} 2 + 1\right) = \frac {2 + \sqrt 2} 4$.
-
-Since $\frac \pi 8 \in \left(0, \frac \pi 2\right)$, one has $\cos\left(\frac \pi 8\right) > 0$ and thus $\cos\left(\frac \pi 8\right) = \sqrt{\cos^2\left(\frac \pi 8\right)} = \frac {\sqrt{2 + \sqrt 2}} 2$.
-
 ** Fonctions                                              :Cuise:
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
 $\arcsin$ est définie sur $\Iff {-1} 1$.
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\arctan$ est définie sur $\Ioo {-\frac \pi 2} {\frac \pi 2}$.
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$\arccos$ est croissante sur $\Iff {-1} 1$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\arctan'(x) = \dfrac 1 {1 + x^2}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ la tangente au graphe de $f$ en $x_0$ a pour équation $y = f'(x_0)(x - x_0) + f(x_0)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Si $f$ est paire alors $f(0) = 0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$\tan$ est paire.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Une fonction strictement croissante est injective.
 
 ** Primitives                                             :Cuise:
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 0
+:CORRECT: V
 :END:
 
  $x \mapsto \int_2^x \dfrac {\dd t}{\ln(t)}$ est une primitive de $\frac 1 {\ln}$ sur $\Ioo 2 {+\infty}$.
 
 
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $x \mapsto x\ln(x) - x$ est une primitive de $\ln$ sur $\R^{+*}$.
+
 ** EDL                                                    :Cuise:
+
+
+Soit $(E) : ay'' + by' + cy = f$ une équation différentielle linéaire à coefficients constants réels, ($H$) l'équation homogène associée et $(EC)$ l'équation caractéristique associée, $\Delta$ son discriminant.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Sol(E) = \ensp{y_p + h}{h \in \Sol(H)$} où $y_p$ est solution particulière.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $(EC)$ est une équation polynomiale de degré 2.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+($H$) a exactement $2$ solutions à valeurs dans $\C$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $\Delta = 0$, alors $t \mapsto e^{\lambda_0 t}$ et $t \mapsto te^{\lambda_0 t}$ sont solution de ($H$) pour un certain $\lambda_0 \in \R$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $\Delta < 0$, alors les solutions non-nulles de ($H$) changent de signe sur $\R$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Si $f(t) = e^t$ alors il y a une solution particulière de la forme $t \mapsto Ke^t$ avec $K \in \R$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Si $f(t) = \cos(t)$ alors il y a une solution particulière de la forme $t \mapsto A\cos(t)$ avec $A \in \R$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $f(t) = \sin(2t)$ et $2i$ est solution de ($EC$) alors on cherchera une solution particulière de la forme $t \mapsto At\cos(2t) + Bt\sin(2t)$ avec $A,B \in \R$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $a,b$ ou $c$ est nul, alors il y a une manière élémentaire de trouver les solutions de ($EC$).
+
+
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  Les solutions homogènes sont toujours solutions de l'équation différentielle avec second membre.
@@ -1121,7 +1372,7 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  Le problème de Cauchy $y'(x) + \sin(x)y(x) = e^x$ et $y(0) = -1$ n'a aucune solution sur $\R$.
@@ -1129,7 +1380,7 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $t \mapsto e^{-at}$ est solution de $y'(t) + a(t)y(t) = 0$.
@@ -1138,52 +1389,110 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 ** Complexes                                              :Cuise:
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  Le groupe des racines \(n\)-èmes de l'unité est $\ens{z \in \C}{ \vert z \vert = 1}$.
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $\sqrt i$ est l'unique solution de partie imaginaire positive de $z^2 = i$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 0
+:CORRECT: V
 :END:
 
  Les solutions complexes de $z^5 = -3$ sont les affixes des sommets d'un pentagone régulier.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 0
+:CORRECT: V
 :END:
 
  Une équation du second degré sur $\C$ possède toujours 1 ou 2 solutions.
 
-** Divers                                                 :Cuise:
 
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $(1 - i)^2 = -2i$.
+ 
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $z = x + iy$ avec $x,y \in \R$ et $x > 0$, alors $\Aarg(z) = \arctan(y/x)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\vert z - z_A \vert$ est la distance entre les points d'affixe $z$ et $z_A$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$\Aarg(z + w) \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\vert zw \vert = \vert z \vert \times \vert w \vert$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $2\cos(t) = e^{it} + e^{-it}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $2i\Im(z) = z - \bar z$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Im(z)$ est un nombre réel.
+ 
+** Divers                                                 :Cuise:
 
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $\displaystyle (a + b)^n = \sum_{k = 0}^n \binom n k a^k b^n$
 
+
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 0
+:CORRECT: V
 :END:
 
  $\binom {n} {k + 1} + \binom {n} k  = \binom {n + 1} {k + 1}$
 
 
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ La proposition $\Pp$ est /héréditaire/ si $\forall n \in \N, \Pp(n) \Rightarrow \Pp(n+1)$.
 
  
+
 ** Géométrie 3D                                           :Cuise:
 
 
@@ -1191,70 +1500,70 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 0
+:CORRECT: V
 :END:
 
  $\ov u$ a pour coordonnées $(\alpha, \beta, \gamma) \ssi \ov u = \alpha \iv + \beta \jv + \gamma \ov k$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $\det\left(\ov u, \ov v, \ov w\right) = 0 \; \Leftrightarrow \; \ov u, \ov v, \ov w$ sont colinéaires.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $\ov u \wedge \ov v = \ov 0$ si et seulement si l'un des deux est le vecteur nul.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  Au cours de la résolution d'un système, un /pivot/ est une opération faisant apparaître un zéro.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  Les racines $7$ èmes de l'unité sont les $e^{i \frac {k\pi} 7}$ pour $k$ variant de $0$ à $6$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  Un système $3 \times 3$ a toujours : $0$, $3$ ou une infinité de solutions.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $\det\left(\ov u, \ov v, \ov w\right) = \left(\ov u \wedge \ov w\right) \cdot \ov v$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $\ov u \wedge \ov v = \Nld{\ov u}\Nld{\ov v} \left\vert \sin\left(\widehat{\ov u,\ov v}\right)\right\vert$.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 1
+:CORRECT: F
 :END:
 
  $\det\left(\ov {u}, \ov {v}, \ov {w}\right) = 1$ si et seulement si $\left(\ov u, \ov v, \ov w\right)$ est une base est orthonormée directe.
 
 *** Question      :TF:
 :PROPERTIES:
-:CORRECT: 0
+:CORRECT: V
 :END:
 
  $\ov k \wedge \jv = -\iv$
@@ -1263,277 +1572,263 @@ $\arccos'(x) = -\dfrac 1 {1 - x^2}$.
 
 
 
-** QCM 10                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm10
-:END: 
-
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
 :END:
 
-$\displaystyle (\cos(u))' = -\sin(u)$.
-- 1 $\displaystyle (\sin(u))' = \cos(u)u'$.
+ Le projeté orthogonal d'un point de l'espace sur une droite existe toujours.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\displaystyle (\ln(u))' = \frac {\ln(u)}{u'}$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\displaystyle \left(e^u\right)' = e^{u'}$.
-- 1 $\displaystyle (\tan(u))' = \left(1 + \tan(u)\times \tan(u)\right) \times u'$.
-- 1 $\displaystyle \lim_{\underset{x \neq \pi}x \to \pi} \dfrac {\cos(x) - \cos(\pi)}{x - \pi} = 0$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\displaystyle \left(\sqrt u\right)' = \dfrac {2u'} {\sqrt u}$.
-- 1 $\displaystyle x \mapsto \sqrt x$ n'est pas dérivable en $0$.
-- 1 $\dfrac {\dd \left(\frac 1 x\right)}{\dd x} = -\dfrac 1 {x^2}$
-- 1 $(u^n)' = nu^{n - 1}u'$
-
-
-
-** QCM 11                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm11
-:END: 
-
-- 1 $\arcsin$ est définie sur $\Iff {-1} 1$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\arctan$ est définie sur $\Ioo {-\frac \pi 2} {\frac \pi 2}$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\arccos'(x) = -\dfrac 1 {1 - x^2}$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\arccos$ est croissante sur $\Iff {-1} 1$.
-- 1 $\arctan'(x) = \dfrac 1 {1 + x^2}$.
-- 1 la tangente au graphe de $f$ en $x_0$ a pour équation $y = f'(x_0)(x - x_0) + f(x_0)$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Si $f$ est paire alors $f(0) = 0$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\tan$ est paire.
-- 1 Une fonction strictement croissante est injective.
-- 1 $\sum_{k = 0}^n k = \dfrac {n(n+1)}2$.
-
-
-** QCM 12                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm12
-:END: 
-
-- 1 Si $z = x + iy$ avec $x,y \in \R$ et $x > 0$, alors $\Aarg(z) = \arctan(y/x)$.
-- 1 $\vert z - z_A \vert$ est la distance entre les points d'affixe $z$ et $z_A$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\Aarg(z + w) \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
-- 1 $\vert zw \vert = \vert z \vert \times \vert w \vert$.
-- 1 $2\cos(t) = e^{it} + e^{-it}$.
-- 1 $2i\Im(z) = z - \bar z$.
-- 1 $\Im(z)$ est un nombre réel.
-- 1 $x \mapsto x\ln(x) - x$ est une primitive de $\ln$ sur $\R^{+*}$.
-- 1 La proposition $\Pp$ est /héréditaire/ si $\forall n \in \N, \Pp(n) \Rightarrow \Pp(n+1)$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Une fonction dont la dérivée est nulle sur $\R^*$ est forcément constante.
-
-
-** QCM 14                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm14
-:END: 
-
-:tags:
-Géométrie 3D
-:end:
-
-- 1 $\ov u$ a pour coordonnées $(\alpha, \beta, \gamma)$ \ssi $\ov u = \alpha \iv + \beta \jv + \gamma \ov k$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\det\left(\ov u, \ov v, \ov w\right) = 0 \; \Leftrightarrow \; \ov u, \ov v, \ov w$ sont colinéaires.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\ov u \wedge \ov v = \ov 0$ si et seulement si l'un des deux est le vecteur nul.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Au cours de la résolution d'un système, un /pivot/ est une opération faisant apparaître un zéro.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Les racines $7$ èmes de l'unité sont les $e^{i \frac {k\pi} 7}$ pour $k$ variant de $0$ à $6$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Un système $3 \times 3$ a toujours : $0$, $3$ ou une infinité de solutions.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\det\left(\ov u, \ov v, \ov w\right) = \left(\ov u \wedge \ov w\right) \cdot \ov v$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\ov u \wedge \ov v = \Nld{\ov u}\Nld{\ov v} \left\vert \sin\left(\widehat{\ov u,\ov v}\right)\right\vert$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-$\det\left(\ov {u}, \ov {v}, \ov {w}\right) = 1$ si et seulement si $\left(\ov u, \ov v, \ov w\right)$ est une base est orthonormée directe.
-- 1 $\ov k \wedge \jv = -\iv$
-
-
-
-** QCM 15                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm15
-:END: 
-
-:tags:
-Géométrie 3D
-Système
-Dénombrement
-:end:
-
-Soit $E$ un ensemble à $n$ éléments
-
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Le nombre de parties de $E$ est $n^2$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Le cardinal d'une partie à $p$ éléments de $E$ est $\binom n p$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-L'ensemble des \(p\)-liste d'éléments distincts de $E$ est $\frac {n!} {(n - p)!}$.
-- 1 Il y a $n!$ façons d'ordonner les éléments de $E$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
-:END:
-
-Un \(p\)-uplet est un ensemble à $p$ éléments.
-- 1 Le projeté orthogonal d'un point de l'espace sur une droite existe toujours.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Une droite dans l'espace a une équation de la forme $ax + by + cz = d$.
-- 1 Les variables qui n'ont pas de pivot s'appellent /variables auxiliaires/.
+
+** Dérivées                                               :Cuise:
+
+Soit $u$ une fonction dérivable sur $\R$ et à valeurs dans $\Ioo 0 {\frac \pi 2}$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
+:END:
+
+$\displaystyle (\cos(u))' = -\sin(u)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\displaystyle (\sin(u))' = \cos(u)u'$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$\displaystyle (\ln(u))' = \frac {\ln(u)}{u'}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$\displaystyle \left(e^u\right)' = e^{u'}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\displaystyle (\tan(u))' = \left(1 + \tan(u)\times \tan(u)\right) \times u'$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\displaystyle \lim_{\underset{x \neq \pi}x \to \pi} \dfrac {\cos(x) - \cos(\pi)}{x - \pi} = 0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$\displaystyle \left(\sqrt u\right)' = \dfrac {2u'} {\sqrt u}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\displaystyle x \mapsto \sqrt x$ n'est pas dérivable en $0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\dfrac {\dd \left(\frac 1 x\right)}{\dd x} = -\dfrac 1 {x^2}$
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $(u^n)' = nu^{n - 1}u'$
+
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Une fonction dont la dérivée est nulle sur $\R^*$ est forcément constante.
+
+** Sommes                                                 :Cuise:
+
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: F
+:END:
+
+ $\displaystyle (a + b)^n = \sum_{k = 0}^n \binom n k a^k b^n$
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\sum_{k = 0}^n k = \dfrac {n(n+1)}2$.
+ 
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Les changements d'indices de sommes sont forcément de la forme $k' = k + n_0$ ou $k' = n_0 - k$ pour $n_0 \in \Z$.
+
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+\[
+\sum_{k = 1}^n q^k = \dfrac {1-q^{n + 1}} {1 - q}
+\]
+
+**** Explication
+
+Il y avait deux erreurs :
+
+Le premier terme est $q^1 = q$, toute la somme peut se factoriser par $q$ : 
+\[
+\sum_{k = 1}^n q^k = q \sum_{m = 0}^{n - 1} q^m = q\dfrac {1-q^{n}} {1 - q}
+\]
+De plus, la formule n'est valable que pour $q \neq 1$.
+ 
+** Systèmes-Matrices                                      :Cuise:
+
+
+Soient $A \in \Mm_{n,p}(\R)$, $B \in \Mm_{q,r}(\R)$ et $M,N \in \Mm_n(\R)$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+$\Mm_{n,p}(\K)$ est l'ensemble des matrices à $p$ colonnes et $n$ lignes.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+Les variables qui n'ont pas de pivot s'appellent /variables auxiliaires/.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 On ne peut pas avoir de ligne de $0$ sous forme échelonnée.
 
+**** Explication
 
-** QCM 16                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm16
-:END: 
+Il est possible d'avoir une matrice (ou un système) sous forme échelonné dont les dernières lignes n'ont que des $0$. En fait la matrice nulle est sous forme échelonnée.
 
-:tags:
-EDL
-:end:
-
-Soit $(E) : ay'' + by' + cy = f$ une équation différentielle linéaire à coefficients constants réels, ($H$) l'équation homogène associée et $(EC)$ l'équation caractéristique associée, $\Delta$ son discriminant.
-
-- 1 $\Sol(E) = \ensp{y_p + h}{h \in \Sol(H)$} où $y_p$ est solution particulière.
-- 1 $(EC)$ est une équation polynomiale de degré 2.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
 :END:
 
-($H$) a exactement $2$ solutions à valeurs dans $\C$.
-- 1 Si $\Delta = 0$, alors $t \mapsto e^{\lambda_0 t}$ et $t \mapsto te^{\lambda_0 t}$ sont solution de ($H$) pour un certain $\lambda_0 \in \R$.
-- 1 Si $\Delta < 0$, alors les solutions non-nulles de ($H$) changent de signe sur $\R$.
+On peut ne pas avoir de ligne de $0$ sous forme échelonnée.
+
+**** Explication
+
+Lisez attentivement l'énoncé !
+
+Il est possible d'avoir une matrice (ou un système) sous forme échelonné dont toutes les lignes ont au moins un coefficient non nul.
+
+
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
 :END:
 
-Si $f(t) = e^t$ alors il y a une solution particulière de la forme $t \mapsto Ke^t$ avec $K \in \R$.
+Une matrice inversible est toujours carrée.
+
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
 :END:
 
-Si $f(t) = \cos(t)$ alors il y a une solution particulière de la forme $t \mapsto A\cos(t)$ avec $A \in \R$.
-- 1 Si $f(t) = \sin(2t)$ et $2i$ est solution de ($EC$) alors on cherchera une solution particulière de la forme $t \mapsto At\cos(2t) + Bt\sin(2t)$ avec $A,B \in \R$.
-- 1 $(1 - i)^2 = -2i$.
-- 1 Si $a,b$ ou $c$ est nul, alors il y a une manière élémentaire de trouver les solutions de ($EC$).
+$AB$ existe si et seulement si $q = p$.
 
-
-** QCM 17                                                 :Bayes:
+*** Question                                                 :TF:
 :PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm17
-:END: 
+:CORRECT:  V
+:END:
+
+L'inverse d'une matrice inversible est inversible.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$\left(M + N\right)^n = \sum_{k = 0}^n \binom n k M^k N^{n - k}$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$A + B$ existe si et seulement si $n = q$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Si $p = n$ alors $AM = MA$.
+
+** Dénombrement                                           :Cuise:
+
+Soit $E$ un ensemble à $n$ éléments.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Le nombre de parties de $E$ est $n^2$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Le cardinal d'une partie à $p$ éléments de $E$ est $\binom n p$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+L'ensemble des \(p\)-liste d'éléments distincts de $E$ est $\frac {n!} {(n - p)!}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Il y a $n!$ façons d'ordonner les éléments de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+Un \(p\)-uplet est un ensemble à $p$ éléments.
+
+** Suites                                                 :Cuise:
 
 Soient $\beta,\gamma \in \R$,
 \[
@@ -1542,125 +1837,158 @@ Soient $\beta,\gamma \in \R$,
 et $P(X) = 0$ son équation caractéristique.
 # , $\Delta$ son discriminant.
 
-- 1 $\Mm_{n,p}(\K)$ est l'ensemble des matrices à $p$ colonnes et $n$ lignes.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Une suite géométrique tend toujours vers $\pm \infty$.
-- 1 Si $(u_n)_n$ est arithmétique de raison $a$, alors $\forall n \in \N, u_n = u_0 + an$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Si $(u_n)_n$ est arithmétique de raison $a$, alors $\forall n \in \N, u_n = u_0 + an$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 La borne supérieure de $A$ est un élément de $A$.
-- 1 Le minimum de $A$ est un minorant qui est un élément de $A$.
-- 1 Si $\left(u_n\right)_n$ est arithmético-géométrique et $\ell$ est son point fixe alors $\left(u_n - \ell\right)_n$ est géométrique.
-- 1 Les changements d'indices de sommes sont forcément de la forme $k' = k + n_0$ ou $k' = n_0 - k$ pour $n_0 \in \Z$.
-- 1 $P(X) = X^2 - \beta X - \gamma$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Le minimum de $A$ est un minorant qui est un élément de $A$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $\left(u_n\right)_n$ est arithmético-géométrique et $\ell$ est son point fixe alors $\left(u_n - \ell\right)_n$ est géométrique.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $P(X) = X^2 - \beta X - \gamma$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 Si $P(\lambda) = 0$, alors $\left(\lambda^n\right)_n$ et $\left(n\lambda^n\right)_n$ sont solution de \eqref{eq}.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $(u_n)_n$ est positive /à partir d'un certain rang/ si $\forall n \in \N, \exists m \geq n, u_{m} \geq 0$.
 
 
-** QCM 18                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm18
-:END:
+** Suites bis                                             :Cuise:
 
 Soit $(u_n)_n$ une suite convergeant vers $\ell \in \R$.
-Soit $A \in \Mm_{n,p}(\R)$, $B \in \Mm_{q,r}(\R)$ et $M,N \in \Mm_n(\R)$.
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
-: À partir d'un certain rang, toutes les suites convergent.
-- 1 : Une matrice inversible est toujours carrée.
-- 1 : $AB$ existe si et seulement si $q = p$.
-- 1 : $\forall \varepsilon > 0, \exists n_0 \in \N, \forall n \geq n_0, \ell - \varepsilon \leq u_n \leq l + \varepsilon$.
-- 1 : Une suite bornée à partir d'un certain rang est bornée.
-- 1 : L'inverse d'une matrice inversible est inversible.
+À partir d'un certain rang, toutes les suites convergent.
+
+
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
 :END:
 
-: $\left(M + N\right)^n = \sum_{k = 0}^n \binom n k M^k N^{n - k}$.
+$\forall \varepsilon > 0, \exists n_0 \in \N, \forall n \geq n_0, \ell - \varepsilon \leq u_n \leq l + \varepsilon$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
 :END:
 
-: Une suite /croissante à partir d'un certain rang/ est croissante.
+Une suite bornée à partir d'un certain rang est bornée.
+
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
-: $A + B$ existe si et seulement si $n = q$.
+Une suite /croissante à partir d'un certain rang/ est croissante.
+
+** Probabilités                                           :Cuise:
+
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
-: Si $p = n$ alors $AM = MA$.
+Un /évènement/ est un élément de l'/univers/ $\Omega$ décrivant une /expérience aléatoire/.
 
-** QCM 19                                                 :Bayes:
-:PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm19
-:END:
+** TODO Équivalents                                       :Bayes:
 
 Soit $(u_n)_n$ une suite réelle.
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Si $u_n \to +\infty$, alors $\cos(u_n) \sim u_n$.
-- 1 Si $u_n \to 0$, alors $\sin(u_n) \sim u_n$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Si $u_n \to 0$, alors $\sin(u_n) \sim u_n$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\ln(1/n) \sim \frac 1 n$.
-- 1 $n^3 = \po{}\left(e^n\right)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
 :END:
 
-Un /évènement/ est un élément de l'/univers/ $\Omega$ décrivant une /expérience aléatoire/.
+ $n^3 = \po{}\left(e^n\right)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\tan(u_n) \sim 1 + \tan^2(u_n)$.
-- 1 Si $u_n \to 0$, alors $\ln(1 + u_n) \sim u_n$.
-- 1 $\arccos$ est définie sur $\Iff {-1} 1$.
-- 1 $n = \gO(n)$.
-- 1 $\arctan\left(n^3\right) \sim \frac \pi 2$.
-
-
-** QCM 20                                                 :Bayes:
+*** Question                                                 :TF:
 :PROPERTIES:
-:EXPORT_FILE_NAME: /tmp/qcm20
+:CORRECT:  V
 :END:
+
+ Si $u_n \to 0$, alors $\ln(1 + u_n) \sim u_n$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\arccos$ est définie sur $\Iff {-1} 1$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $n = \gO(n)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\arctan\left(n^3\right) \sim \frac \pi 2$.
+
+
+** TODO QCM 20                                            :Bayes:
 
 Soit $(\Omega,\Pro)$ un espace probabilisé.
 Soient $A,B$ deux évènements de probabilités non-nulles. Soit $(E_1,\cdots, E_n)$ un système complet d'évènements avec $\forall i, \Pro(E_i) \neq 0$.
@@ -1668,47 +1996,67 @@ Soit $\Tt = (u_1,\cdots, u_p)$ une famille de vecteurs de $\R^n$.
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\Pro(A) = \dfrac {\Card(A)}{\Card(\Omega)}$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\Pro(A \cup B) = \Pro(A) + \Pro(B)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\Tt$ est libre si et seulement si $0 \ov {u_1} + 0\ov{u_2} + \cdots  + 0\ov{u_p} = \ov 0$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Si $n = p$ alors $\Tt$ est libre.
-- 1 $\Tt$ est génératrice de $\R^n$ si et seulement si $\forall v \in \R^n, \exists \alpha_1, \cdots, \alpha_p \in \R, v = \displaystyle\sum_{i = 1}^p \alpha_i u_i$.
-- 1 $\Pro(A\cap B) = \Pro_A(B)\Pro(A)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\Tt$ est génératrice de $\R^n$ si et seulement si $\forall v \in \R^n, \exists \alpha_1, \cdots, \alpha_p \in \R, v = \displaystyle\sum_{i = 1}^p \alpha_i u_i$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Pro(A\cap B) = \Pro_A(B)\Pro(A)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\Pro(A) = \displaystyle\sum_{k = 1}^n \Pro_{E_i}(A)$.
-- 1 $\Pro_A(B) = \dfrac {\Pro(B)\Pro_B(A)}{\Pro(B)\Pro_B(A) + \Pro(\bar B)\Pro_{\bar B}(A)}$.
-- 1 $\left(A, \bar A\right)$ est un système complet d'évènements.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\Pro_A(B) = \dfrac {\Pro(B)\Pro_B(A)}{\Pro(B)\Pro_B(A) + \Pro(\bar B)\Pro_{\bar B}(A)}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\left(A, \bar A\right)$ est un système complet d'évènements.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\Pro : \Omega \to \Iff 0 1$.
 
 
-** QCM 21                                                 :Bayes:
+** TODO QCM 21                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm21
 :END:
@@ -1716,32 +2064,67 @@ Soit $A \in \Mm_{n,p}(\R)$. On note $C_1, C_2 \cdots C_p$ les colonnes de $A$ et
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\Ker(A) = \ens{X \in \Mm_{n,1}(\R)}{AX = \ov 0_p}$.
-- 1 $\Vect(\Tt)$ est l'ensemble des combinaisons linéaires des vecteurs de $\Tt$.
-- 1 $\Tau \in \left(\Mm_{n,1}(\R)\right)^p$
-- 1 $\Image(A) = \ensp{AX}{X \in \Mm_{p,1}(\R)}$.
-- 1 $AX$ est une combinaison linéaire des vecteurs colonnes de $A$.
-- 1 $AX = Y$ encode un système linéaire à $n$ équations et $p$ inconnues.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\Vect(\Tt)$ est l'ensemble des combinaisons linéaires des vecteurs de $\Tt$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Tau \in \left(\Mm_{n,1}(\R)\right)^p$
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Image(A) = \ensp{AX}{X \in \Mm_{p,1}(\R)}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $AX$ est une combinaison linéaire des vecteurs colonnes de $A$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $AX = Y$ encode un système linéaire à $n$ équations et $p$ inconnues.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $f$ est injective si et seulement si $\Mat(f)$ est inversible.
-- 1 $AX = \ov 0_n$ possède une unique solution si et seulement si $\Tt$ est libre.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $AX = \ov 0_n$ possède une unique solution si et seulement si $\Tt$ est libre.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 Si $f(0) < 0$ et $f(1) > 0$ alors il existe $c \in \Ioo 0 1$ tel que $f(c) = 0$.
-- 1 Si $f$ est monotone sur $\R$, alors elle admet une limite en $-\infty$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $f$ est monotone sur $\R$, alors elle admet une limite en $-\infty$.
 
 
-** QCM 22                                                 :Bayes:
+** TODO QCM 22                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm22
 :END:
@@ -1750,43 +2133,68 @@ Soit $u : \R \to \R$ une fonction telle que $\lim_{x \to 1} u(x) = 0$ et $\lim_{
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\sin(u(x)) \simeq x$ quand $x \to 0$.
-- 1 $(u(x))^\alpha = 1 + \alpha (u(x) - 1) + \po{}(u(x) - 1)$ quand $x \to +\infty$.
-- 1 $e^{\frac 1 x} \simeq u(x)$ quand $x \to + \infty$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $(u(x))^\alpha = 1 + \alpha (u(x) - 1) + \po{}(u(x) - 1)$ quand $x \to +\infty$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $e^{\frac 1 x} \simeq u(x)$ quand $x \to + \infty$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\Pro(A \cap B) = \Pro(A) \Pro(B)$.
-- 1 $\arctan(u(x)) \simeq u(x)$ quand $x \to 1$.
-- 1 $\ln(u(x)) \simeq u(x) - 1$ quand $x \to +\infty$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\arctan(u(x)) \simeq u(x)$ quand $x \to 1$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\ln(u(x)) \simeq u(x) - 1$ quand $x \to +\infty$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\cos(u(x)) = 1 + \demi u(x)^2 + \po{}\left(u(x)\right)$ quand $x \to 1$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\left(x - 1\right)^{u(x)} \to 1$  quand $x \to 1$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\sqrt{1 + u(x)} = \demi u(x) + \po{}\left(u(x)\right)$ quand $x \to 1$.
-- 1 La formule des probabilités totales donne : $\Pro(A) = \Pro(B)\Pro_B(A)+\Pro\left(\bar B\right)\Pro_{\bar B}(A)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ La formule des probabilités totales donne : $\Pro(A) = \Pro(B)\Pro_B(A)+\Pro\left(\bar B\right)\Pro_{\bar B}(A)$.
 
 
 
-** QCM 23                                                 :Bayes:
+** TODO QCM 23                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm23
 :END:
@@ -1795,167 +2203,267 @@ Soit $P \in \R[X]$ et $f : \R \to \R$ continue avec $a,b \in \R, a < b$. Soit $u
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Un polynôme de degré $n$ a toujours $n$ racines distinctes.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $(X-\alpha)^k$ divise $P$ signifie que $\alpha$ est racine de multiplicité $k$ de $P$.
-- 1 Tous les polynômes non-constants sont scindés sur $\C$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Tous les polynômes non-constants sont scindés sur $\C$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\tilde{P}'(\alpha) = 0$ signifie que $\alpha$ est racine double de $P$.
-- 1 Toutes les fonctions dérivables en $0$ admettent un développement limité d'ordre $1$ en $0$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Toutes les fonctions dérivables en $0$ admettent un développement limité d'ordre $1$ en $0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 Si $f$ est continue en $a$ alors elle est dérivable en $a$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Si $f(b) = f(a)$ alors $\exists c \in \Ioo a b, f'(c) = 0$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\displaystyle (uv)^{(n)} = \sum_{k = 0}^n \binom n k u^{(k)}v^{(n)}$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $x \mapsto x^\alpha$ est dérivable en $0$ \ssi $\alpha < 1$.
-- 1 Si $f(x) = f(1) + \ell (x - 1) + \po{x\to 1}(x - 1)$ alors $f$ est dérivable en $1$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $f(x) = f(1) + \ell (x - 1) + \po{x\to 1}(x - 1)$ alors $f$ est dérivable en $1$.
 
 
-** QCM 24                                                 :Bayes:
+** TODO QCM 24                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm24
 :END:
 
 Soit $f$ de classe $\Cc^2$ sur un voisinage de $a \in \R$.
 
-- 1 $\sin(x) = x - \frac 1 6 x^3 + \frac 1 {120} x^5 + \po{x\to 0}\left(x^5\right)$.
-- 1 $\exp(x) = 1 + x + \demi x^2 + \frac 1 6 x^3 + \frac 1 {24} x^4 + \po{x \to 0}\left(x^4\right)$.
-- 1 $\ln(1 - x) = -x - \demi x^2 - \frac 1 3 x^3 - \frac 1 4 x^4 + \po{x \to 0}\left(x^4\right)$.
-- 1 $\sqrt{1 + x} = 1 + \demi x - \frac 1 8 x^2 + \frac 1 {16} x^3 + \po{x \to 0}\left(x^3\right)$.
-- 1 $\frac 1 {1 - x} = 1 + x + x^2 + x^3 + x^4 + x^5 + \po{x \to 0}\left(x^5\right)$.
-- X $\ln(1 + x) = \displaystyle\sum_{k = 0}^n (-1)^{n + 1}\frac {x^k} {k} + \po{x \to 0}\left(x^n\right)$.
-- 1 $f(x) = f(a) + f'(a)(x-a) + \demi f''(a)(x-a)^2 + \frac 1 6 f^{(3)}(a) (x - a)^3 + \po{x \to a}((x - a)^3)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\sin(x) = x - \frac 1 6 x^3 + \frac 1 {120} x^5 + \po{x\to 0}\left(x^5\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\exp(x) = 1 + x + \demi x^2 + \frac 1 6 x^3 + \frac 1 {24} x^4 + \po{x \to 0}\left(x^4\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\ln(1 - x) = -x - \demi x^2 - \frac 1 3 x^3 - \frac 1 4 x^4 + \po{x \to 0}\left(x^4\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\sqrt{1 + x} = 1 + \demi x - \frac 1 8 x^2 + \frac 1 {16} x^3 + \po{x \to 0}\left(x^3\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\frac 1 {1 - x} = 1 + x + x^2 + x^3 + x^4 + x^5 + \po{x \to 0}\left(x^5\right)$.
+- X $\ln(1 + x) = \displaystyle\sum_{k = 0}^n (-1)^{n + 1}\frac {x^k} {k} + \po{x \to 0}\left(x^n\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $f(x) = f(a) + f'(a)(x-a) + \demi f''(a)(x-a)^2 + \frac 1 6 f^{(3)}(a) (x - a)^3 + \po{x \to a}((x - a)^3)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $(1 + x)^{\alpha} = 1 + \alpha x + \frac {\alpha^2} 2 x^2 + \frac {\alpha^3} {6} x^3 + \po{x \to 0}\left(x^\alpha\right)$.
-- 1 $\cos(x) = \displaystyle\sum_{k = 0}^n (-1)^k \dfrac {x^{2k}}{(2k)!} + \po{x\to 0}\left(x^{2n}\right)$
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\cos(x) = \displaystyle\sum_{k = 0}^n (-1)^k \dfrac {x^{2k}}{(2k)!} + \po{x\to 0}\left(x^{2n}\right)$
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\arctan(x) = 1 - x + \frac {x^3} {3!} - \frac {x^5} {5!} + \po{x \to 0}(x^5)$.
 
-** QCM 25                                                 :Bayes:
+** TODO QCM 25                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm25
 :END:
 
 Soit $E$ un \(\K\)-espace vectoriel et $F,G$ deux sous-espaces vectoriels de $E$. Soit $A \in \Mm_{n,p}(\K)$.
 
-- 1 $F \cap G$ est un sous-espace vectoriel de $E$.
-- 1 $0_F \in E$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $F \cap G$ est un sous-espace vectoriel de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $0_F \in E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $F$ est stable par composition.
-- 1 $\ln(1 - x) = - x - \demi x^2 - \frac 1 3 x^3 - \frac 1 4 x^4 + \po{x\to 0}\left(x^4\right)$.
-- 1 Si $u,v \in F$, alors $\Vect(u,v)$ est un sous-espace vectoriel de $F$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\ln(1 - x) = - x - \demi x^2 - \frac 1 3 x^3 - \frac 1 4 x^4 + \po{x\to 0}\left(x^4\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $u,v \in F$, alors $\Vect(u,v)$ est un sous-espace vectoriel de $F$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\sqrt{1 + x} = 1 - \demi x + \frac 1 8 x^2 + \po{x \to 0}\left(x^2\right)$.
-- 1 $\forall u,v \in G, \forall \lambda, \mu \in \K, \lambda u + \mu v \in G$.
-- 1 L'ensemble des solutions d'une équation différentielle linéaire homogène est un espace vectoriel.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\forall u,v \in G, \forall \lambda, \mu \in \K, \lambda u + \mu v \in G$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ L'ensemble des solutions d'une équation différentielle linéaire homogène est un espace vectoriel.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\ker(A)$ est un sous-espace vectoriel de $\Mm_{n,1}\left(\K\right)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\sin(x) = x + \frac 1 3 x^3 - \frac 1 {120} x^5 + \po{x \to 0}\left(x^5\right)$.
 
 
-** QCM 26                                         :Bayes:
+** TODO QCM 26                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm26
 :END:
 
 Soit $E$ un espace vectoriel sur $\K$ et $\Bb = (e_1,e_2,\cdots e_d)$ une base de $E$. Soient $P \in \K[X]$ un polynôme et $\lambda \in \K$.
 
-- 1 $((X - 1)^2, 3, (X + 2))$ est une famille libre de $\R_2[X]$.
-- 1 $\forall x \in E, \exists ! (\alpha_1,\alpha_2,\cdots \alpha_d) \in \K^d$ tel que $x = \sum_{i = 1}^d \alpha_i e_i$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $((X - 1)^2, 3, (X + 2))$ est une famille libre de $\R_2[X]$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\forall x \in E, \exists ! (\alpha_1,\alpha_2,\cdots \alpha_d) \in \K^d$ tel que $x = \sum_{i = 1}^d \alpha_i e_i$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\lambda$ est racine de $P$ si et seulement si $\lambda$ divise $P$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $D_{\tan} = \ensp{k\frac \pi 2}{k \in \Z}$.
-- 1 $f(x) = -x^2 + \po_{x \to 0}(x^2)$ entraîne que $f$ a un maximum local en $0$.
-- 1 $\Vect(\Bb) = E$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $f(x) = -x^2 + \po_{x \to 0}(x^2)$ entraîne que $f$ a un maximum local en $0$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Vect(\Bb) = E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 Si $f(x) = x^{-1} + \po{x \to + \infty}\left(x^{-2}\right)$ alors $f$ a une asymptote verticale en $+ \infty$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Si $f(x) = \lambda x + \po{x \to 0}\left(x\right)$ alors $f(x) \underset{x \to 0}\sim \lambda x$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\tan(x) = x - \frac {x^3} 3 + \po{x \to 0}\left(x^3\right)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\left((1,0),(0,1)\right)$ est une base de l'espace.
 
-** QCM 27                                                 :Bayes:
+** TODO QCM 27                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm27
 :END:
@@ -1964,84 +2472,134 @@ Soit $f : \Iff 0 1 \to \R$ continue. $h,g$ deux fonctions de classe $\Cc^1$ sur 
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Une famille est soit libre soit génératrice de $E$ mais jamais les deux.
-- 1 Toutes les bases de $E$ ont le même nombre d'éléments.
-- 1 $\displaystyle \frac 1 n \sum_{k = 0}^{n - 1} f\left(\frac k n\right) \underset{n \to +\infty}\longrightarrow \int_0^1 f(t) \dd t$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Toutes les bases de $E$ ont le même nombre d'éléments.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\displaystyle \frac 1 n \sum_{k = 0}^{n - 1} f\left(\frac k n\right) \underset{n \to +\infty}\longrightarrow \int_0^1 f(t) \dd t$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 Si $f'(x) = 1 - \frac {x^2} 2 + \po{x \to 0}\left(x^2\right)$ alors $f(x) = x - \frac {x^3} 6 + \po{x \to 0}\left(x^3\right)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\displaystyle \int_a^b h'(t)g(t)\dd t = h(a)g(a) - h(b)g(b) + \int_a^b h(t)g'(t)\dd t$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Si $g$ est de classe $C^2$ sur $\Iff a b$, $\displaystyle g(b) = g(a) + g'(a)(b - a) + \int_a^b \dfrac {(b - a)^2} {2!} g^{'}(t)\dd t$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 La valeur moyenne du cosinus sur $\Iff 0 \pi$ est $\demi$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Une primitive de $x \mapsto xe^{-x}$ est $x \mapsto \frac {x^2} 2 e^{-x}$.
-- 1 Il existe une famille finie $\Ll$ tel que $E = \Vect(\Ll)$.
-- 1 Si $I(x) = \int_0^x f(t)\dd t$ alors $I$ est dérivable sur $\Iff 0 1$ et $I' = f$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
 
-** VERIFY QCM 28                                          :Bayes:
+ Il existe une famille finie $\Ll$ tel que $E = \Vect(\Ll)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si $I(x) = \int_0^x f(t)\dd t$ alors $I$ est dérivable sur $\Iff 0 1$ et $I' = f$.
+
+** TODO VERIFY QCM 28                                     :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm28
 :END:
 
 Soit $E$ un espace vectoriel de dimension $7$. Soit $f$ de classe $\Cc^0$ sur $\Iff {u(a)} {u(b)}$ et $u$ de classe $\Cc^1$ et croissante sur $\Iff a b$. Soit $n \in \N$ un entier.
 
-- 1 Il est possible d'avoir une famille génératrice de $E$ de $9$ éléments.
-- 1 Il est possible d'avoir une famille libre de $E$ de $2$ éléments.
-- 1 Si une famille de $E$ possède $8$ éléments, alors elle est liée.
-- 1 Le rang d'une matrice à $n$ lignes est la dimension du sous-espace de $\Mm_{n,1}(\K)$ engendré par ses colonnes.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Il est possible d'avoir une famille génératrice de $E$ de $9$ éléments.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Il est possible d'avoir une famille libre de $E$ de $2$ éléments.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Si une famille de $E$ possède $8$ éléments, alors elle est liée.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Le rang d'une matrice à $n$ lignes est la dimension du sous-espace de $\Mm_{n,1}(\K)$ engendré par ses colonnes.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 Si une famille de $E$ possède $8$ éléments, alors elle est génératrice de $E$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Si une famille de $E$ possède $8$ éléments, alors c'est une base de $E$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Le rang d'une famille c'est son nombre de vecteurs.
-- 1 $\displaystyle\int_a^b f(u(t))u'(t)\dd t = \int_{u(a)}^{u(b)}f(s)\dd s$.
-- 1 Il y a des matrices de $\Mm_n(\R)$ qui ne sont pas inversibles.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\displaystyle\int_a^b f(u(t))u'(t)\dd t = \int_{u(a)}^{u(b)}f(s)\dd s$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ Il y a des matrices de $\Mm_n(\R)$ qui ne sont pas inversibles.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 Un système complet d'évènements ça dépend de la probabilité sur $\Omega$.
 
-** QCM 29                                                 :Bayes:
+** TODO QCM 29                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm29
 :END:
@@ -2051,52 +2609,67 @@ Soit $f: E \to F$ linéaire. Soient $u,v \in E$
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $f(0_E) = 0_F$ si et seulement si $F$ est un sous-espace vectoriel de $E$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 L'image d'un base de $E$ par $f$ est une base de $\image(f)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $f(u) = 0_F \Rightarrow u = \ker(f)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\image(f)$ est engendré par les colonnes de $f$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $f$ est un isomorphisme si et seulement si $E = F$.
-- 1 $f(u + v) = f(u) + f(v)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $f(u + v) = f(u) + f(v)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\image(f)$ est un sous-espace vectoriel de $E$.
-- 1 Un automorphisme est un endomorphisme bijectif.
-- 1 $\ker(f)$ est un sous-espace vectoriel de $E$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ Un automorphisme est un endomorphisme bijectif.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\ker(f)$ est un sous-espace vectoriel de $E$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $x \mapsto x^2$ est linéaire de $\R$ vers $\R$.
 
 
-** VERIFY QCM 30                                          :Bayes:
+** TODO VERIFY QCM 30                                     :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm30
 :END:
@@ -2105,43 +2678,68 @@ $x \mapsto x^2$ est linéaire de $\R$ vers $\R$.
 Soit $\left(\Omega,\Pro\right)$ un espace probabilisé d'une expérience aléatoire. Et $X$ une variable aléatoire réelle sur cet espace.
 Soient $f,g : E \to F$ linéaire entre deux espaces vectoriels de dimension finies sur $\K$. Soit $\Bb_E = (e_1,\cdots,e_n)$ une base de $E$ et $\Bb_F$ une base de $F$
 
-- 1 L'ensemble des $\omega \in \Omega$ tels que $X(\omega) = 2$ est un évènement de l'expérience.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ L'ensemble des $\omega \in \Omega$ tels que $X(\omega) = 2$ est un évènement de l'expérience.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 L'ensemble des valeurs prises par $X$ est un évènement de l'expérience.
-- 1 La matrice d'un endomorphisme entre deux bases est toujours carrée quels que soient les bases choisies.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ La matrice d'un endomorphisme entre deux bases est toujours carrée quels que soient les bases choisies.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 La matrice de $f$ entre $\Bb_E$ et $\Bb_F$ a $\dim(F)$ colonnes.
-- 1 L'image de $\Bb_E$ par $f$ est génératrice de $\Im(f)$.
-- 1 $\Mat_{\Bb_E,\Bb_F}(f + g) = \Mat_{\Bb_E,\Bb_F}(f) + \Mat_{\Bb_E,\Bb_F}(g)$.
-- 1 L'ensemble des $\ensva{X = x}$ pour $x \in X(\Omega)$ forme un système complet d'évènements.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ L'image de $\Bb_E$ par $f$ est génératrice de $\Im(f)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Mat_{\Bb_E,\Bb_F}(f + g) = \Mat_{\Bb_E,\Bb_F}(f) + \Mat_{\Bb_E,\Bb_F}(g)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ L'ensemble des $\ensva{X = x}$ pour $x \in X(\Omega)$ forme un système complet d'évènements.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 L'ensemble $\Omega = \{(P,P,F,F)\}$ modélise l'expérience consistant à lancer 4 fois une pièce équilibrée.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Si l'image de $\Bb_E$ par $f$ est libre, alors $f$ est un isomorphisme.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 Il est possible que $f \neq g$ alors que pour tout $i$, $f(e_i) = g(e_i)$.
 
-** VERIFY QCM 31                                          :Bayes:
+** TODO VERIFY QCM 31                                     :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm31
 :END:
@@ -2151,41 +2749,66 @@ Soit $F$ un espace vectoriel de dimension $k$, $C$ une base de $F$ et $u \in \Ll
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $P_{B,B'}\Mat_{B}(x) = \Mat_{B'}(x)$.
-- 1 $P_{B,B'}$ est la /matrice de passage de $B$ à $B'$./
-- 1 $\Mat_{B}(f)\Mat_{B}(x) = \Mat_{B}(f(x))$.
-- 1 $\Mat_{B'}(f) = P_{B',B}\Mat_{B}(f)P_{B,B'}$.
-- 1 $P_{B,B'} = \Mat_{B}\left(B'\right)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $P_{B,B'}$ est la /matrice de passage de $B$ à $B'$./
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Mat_{B}(f)\Mat_{B}(x) = \Mat_{B}(f(x))$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $\Mat_{B'}(f) = P_{B',B}\Mat_{B}(f)P_{B,B'}$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+ $P_{B,B'} = \Mat_{B}\left(B'\right)$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 $\Mat_{B,C}(u) \in \Mm_{m,k}(\K)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\Mat_{B,C}(f \circ u) = \Mat_{B}(f)\Mat_{C}(u)$.
-- 1 $\Mat_{B,C}(u)\Mat_{C,B}\left(u^{-1}\right) = I_k$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  V
+:END:
+
+ $\Mat_{B,C}(u)\Mat_{C,B}\left(u^{-1}\right) = I_k$.
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
 :END:
 
 La variance est linéaire.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  Si $X \hookrightarrow \Bb(n,p)$ alors $\E(X) = np$ et $\Var(X) = np(1 -p)$.
 
-** TOFIDDLE QCM 32                                        :Bayes:
+** TODO TOFIDDLE QCM 32                                   :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm32
 :END:
@@ -2195,67 +2818,67 @@ Soit $F,G$ deux sous-espaces vectoriels de $E$.
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $m = \dim\left(\ker(f)\right) + \rg(f)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $F + G \subseteq F \cup G$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $F \cup G \subseteq F + G$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\dim(F) = \dim(G) \Rightarrow F = G$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $\dim(F + G) = \dim(F) + \dim(G) - \dim(F \cap G)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $\dim(F) = \dim(E) \Rightarrow F = E$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $\Mat_B(f)$ et $\Mat_{B'}(f)$ sont semblables.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $\Mat_{B,B'}(f)\Mat_B(x) = \Mat_{B'}(f(x))$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $P_{B,B'}\Mat_{B}(x) = \Mat_{B'}(x)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $F \oplus G = E$ \ssi $\forall x \in E, \exists ! (u,v)\in F\times G, x = u + v$.
 
 
-** TOFIDDLE QCM 33                                        :Bayes:
+** TODO TOFIDDLE QCM 33                                   :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm33
 :END:
@@ -2264,61 +2887,61 @@ Soit $E$ un espace vectoriel de dimension finie, $B$ bases de $E$. $p \in \Ll(E)
 
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\Mat_{\Bb}(p)$ est une matrice diagonale avec des $1$ et des $0$ sur la diagonale.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $s \circ s = id_{E}$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $p$ est inversible d'inverse $q = \id_{E} - p$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $s$ est la symétrie de direction $\Ker(s)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $p$ est la projection sur $\Ker(p)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $\ensp{x \in E}{s(x) = x}$ est l'espace invariant de la symétrie $s$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  0
+:CORRECT:  V
 :END:
 
  $\ensp{x \in E}{s(x) = -x}$ est l'espace direction de la symétrie $s$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\ensp{x \in E}{s(x) = x} = \image(s)$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\Pro\left(\vert X - \E(X) \vert < \varepsilon\right) \leq \dfrac {\Var(X)}{\varepsilon^2}$.
 *** Question                                                 :TF:
 :PROPERTIES:
-:CORRECT:  1
+:CORRECT:  F
 :END:
 
 $\E(XY) = \E(X)\E(Y)$.
