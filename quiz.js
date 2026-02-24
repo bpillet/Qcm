@@ -151,7 +151,7 @@ function renderQuestions() {
     card.innerHTML = `
       <div class="question-text">${q.text}</div>
       ${isTF ? renderTrueFalse(qi) : renderSliders(qi, q)}
-      <div class="slider-hint">Déplace le${n > 2 ? 's' : ''} slider${n > 2 ? 's' : ''} pour indiquer ton niveau de confiance puis confirme.</div>
+      <div class="slider-hint">Déplace le${n > 2 ? 's' : ''} curseur${n > 2 ? 's' : ''} pour indiquer ton niveau de confiance puis confirme.</div>
       <button class="btn-confirm" onclick="confirmAnswer(${qi})">Confirmer</button>
       <div class="feedback" id="fb-${qi}"></div>
     `;

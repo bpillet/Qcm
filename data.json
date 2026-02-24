@@ -1,5 +1,110 @@
 [
   {
+    "title": "Trigo",
+    "texte": "",
+    "questions": [
+      {
+        "text": "$\\cos\\left(-\\frac {3\\pi} 2\\right) =$",
+        "answers": [
+          "$\\frac {\\sqrt 2} 2$",
+          "$-\\frac {\\sqrt 2} 2$",
+          "$-\\frac 1 2$",
+          "$0$"
+        ],
+        "correct": 3,
+        "explanation": ""
+      },
+      {
+        "text": "$\\cos\\left(0\\right) =$",
+        "answers": [
+          "$0$",
+          "$1$",
+          "$-1$",
+          "pas défini."
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\tan\\left(0\\right) =$",
+        "answers": [
+          "$0$",
+          "$1$",
+          "$-1$",
+          "pas défini"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\sin\\left(0\\right) =$",
+        "answers": [
+          "$0$",
+          "$1$",
+          "$-1$",
+          "pas défini"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arctan\\left(0\\right) =$",
+        "answers": [
+          "$0$",
+          "$1$",
+          "$\\frac \\pi 2$",
+          "pas défini"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arccos\\left(1\\right) =$",
+        "answers": [
+          "$0$",
+          "$\\pi$",
+          "$-1$",
+          "pas défini"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arccos\\left(-1\\right) =$",
+        "answers": [
+          "$0$",
+          "$\\pi$",
+          "$-1$",
+          "pas défini"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arcsin\\left(\\pi\\right) =$",
+        "answers": [
+          "$0$",
+          "$\\pi$",
+          "$-1$",
+          "pas défini"
+        ],
+        "correct": 3,
+        "explanation": ""
+      },
+      {
+        "text": "Pour $a,b \\in R$, $\\sin\\left(b - a\\right) =$",
+        "answers": [
+          "$\\sin(a)\\cos(b) - \\sin(b) \\cos(a)$",
+          "$\\sin(a)\\sin(b) + \\cos(b)\\cos(a)$",
+          "$\\sin(b)\\cos(a) - \\sin(a)\\cos(b)$",
+          "$\\cos(b)\\sin(a) + \\cos(a) \\sin(b)$"
+        ],
+        "correct": 2,
+        "explanation": ""
+      }
+    ]
+  },
+  {
     "title": "Fonctions",
     "texte": "",
     "questions": [
@@ -235,7 +340,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Ça c'est le groupe unitaire. D'ailleurs on voit bien que ça ne dépend pas de $n$."
       },
       {
         "text": "$\\sqrt i$ est l'unique solution de partie imaginaire positive de $z^2 = i$.",
@@ -244,7 +349,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Ce nombre n'existe pas ! $\\sqrt a$ n'a de sens que si $a \\in \\R^+$."
       },
       {
         "text": "Les solutions complexes de $z^5 = -3$ sont les affixes des sommets d'un pentagone régulier.",
@@ -253,7 +358,7 @@
           "False"
         ],
         "correct": 0,
-        "explanation": ""
+        "explanation": "Il s'agit des $\\sqrt[5]{3}e^{i\\pi(1/5 + 2k/5)}$ pour $0 \\leq k < 5$. Ce sont $5$ points sur le cercle de centre l'origine et de rayon $\\sqrt[5]{3}$."
       },
       {
         "text": "Une équation du second degré sur $\\C$ possède toujours 1 ou 2 solutions.",
@@ -262,7 +367,7 @@
           "False"
         ],
         "correct": 0,
-        "explanation": ""
+        "explanation": "C'est un cas particulier du théorème de D'Alembert-Gauss."
       },
       {
         "text": "$(1 - i)^2 = -2i$.",
@@ -298,7 +403,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "$\\Aarg(z \\times w)   \\equiv \\Aarg(z) + \\Aarg(w) [2\\pi]$."
       },
       {
         "text": "$\\vert zw \\vert = \\vert z \\vert \\times \\vert w \\vert$.",
@@ -343,7 +448,7 @@
     "texte": "",
     "questions": [
       {
-        "text": "$\\displaystyle (a + b)^n = \\sum_{k = 0}^n \\binom n k a^k b^n$",
+        "text": "Pour $a,b \\in \\R$ et $n \\in \\N$ :\n\\[\n(a + b)^n = \\sum_{k = 0}^n \\binom n k a^k b^n\n\\]",
         "answers": [
           "True",
           "False"
@@ -352,7 +457,7 @@
         "explanation": ""
       },
       {
-        "text": "$\\binom {n} {k + 1} + \\binom {n} k  = \\binom {n + 1} {k + 1}$",
+        "text": "Pour $n,k \\in \\N$ avec $0 \\leq k \\leq n$ : \n\\[\n\\binom {n} {k + 1} + \\binom {n} k  = \\binom {n + 1} {k + 1}\n\\]",
         "answers": [
           "True",
           "False"
@@ -373,7 +478,7 @@
   },
   {
     "title": "Géométrie 3D",
-    "texte": "",
+    "texte": "\n\n\n$\\left(\\iv,\\jv,\\ov k\\right)$ est une base orthonormée directe de l'espace. $\\ov u,\\ov v$ et $\\ov w$ sont trois vecteurs de l'espace quelconques.\n\n",
     "questions": [
       {
         "text": "$\\ov u$ a pour coordonnées $(\\alpha, \\beta, \\gamma) \\ssi \\ov u = \\alpha \\iv + \\beta \\jv + \\gamma \\ov k$.",
@@ -472,15 +577,6 @@
           "False"
         ],
         "correct": 0,
-        "explanation": ""
-      },
-      {
-        "text": "Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.",
-        "answers": [
-          "True",
-          "False"
-        ],
-        "correct": 1,
         "explanation": ""
       },
       {
@@ -631,13 +727,13 @@
         "explanation": ""
       },
       {
-        "text": "\\[\n\\sum_{k = 1}^n q^k = \\dfrac {1-q^{n + 1}} {1 - q}\n\\]",
+        "text": "\\[\n\\forall q \\in R, \\quad \\sum_{k = 1}^n q^k = \\dfrac {1-q^{n + 1}} {1 - q}\n\\]",
         "answers": [
           "True",
           "False"
         ],
         "correct": 0,
-        "explanation": ""
+        "explanation": "Il y avait deux erreurs :\n\nLe premier terme est $q^1 = q$, toute la somme peut se factoriser par $q$ : \n\\[\n\\sum_{k = 1}^n q^k = q \\sum_{m = 0}^{n - 1} q^m = q\\dfrac {1-q^{n}} {1 - q}\n\\]\nDe plus, la formule n'est valable que pour $q \\neq 1$."
       }
     ]
   },
@@ -670,7 +766,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Il est possible d'avoir une matrice (ou un système) sous forme échelonné dont les dernières lignes n'ont que des $0$. En fait la matrice nulle est sous forme échelonnée."
       },
       {
         "text": "On peut ne pas avoir de ligne de $0$ sous forme échelonnée.",
@@ -679,7 +775,16 @@
           "False"
         ],
         "correct": 0,
-        "explanation": ""
+        "explanation": "Lisez attentivement l'énoncé !\n\nIl est possible d'avoir une matrice (ou un système) sous forme échelonné dont toutes les lignes ont au moins un coefficient non nul."
+      },
+      {
+        "text": "Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "Ce n'est vrai que quand le système le système est sous-forme /échelonnée/."
       },
       {
         "text": "Une matrice inversible est toujours carrée.",
@@ -715,7 +820,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "La formule est correcte à condition que $M$ et $N$ *commutent* ! !"
       },
       {
         "text": "$A + B$ existe si et seulement si $n = q$.",
@@ -748,7 +853,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Le nombre de parties de $E$ est $2^n$."
       },
       {
         "text": "Le cardinal d'une partie à $p$ éléments de $E$ est $\\binom n p$.",
@@ -757,7 +862,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Quelle est la couleur du cheval blanc d'Henri IV ?\n...\nQuel est le cardinal d'une partie à $p$ éléments ?"
       },
       {
         "text": "L'ensemble des \\(p\\)-liste d'éléments distincts de $E$ est $\\frac {n!} {(n - p)!}$.",
@@ -766,7 +871,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "$\\frac {n!} {(n - p)!}$ est un nombre ; la question demande un ensemble !"
       },
       {
         "text": "Il y a $n!$ façons d'ordonner les éléments de $E$.",
@@ -784,7 +889,49 @@
           "False"
         ],
         "correct": 1,
+        "explanation": "Un \\(p\\)-uplet n'est pas un ensemble, il peut contenir plusieurs fois le même élément et l'ordre des éléments compte."
+      }
+    ]
+  },
+  {
+    "title": "Inégalités, majorant, minorant",
+    "texte": "\n\nSoit $A$ une partie de $\\R$.\n\n",
+    "questions": [
+      {
+        "text": "La borne supérieure de $A$ est un élément de $A$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
         "explanation": ""
+      },
+      {
+        "text": "Le minimum de $A$ est un minorant qui est un élément de $A$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$m \\in \\R$ est la borne supérieure de $A$ si et seulement si $\\forall x \\in A , x \\leq m$ et $\\forall y \\in \\R, (y < m) \\Rightarrow (\\exists x \\in A, y < a)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$m \\in \\R$ est la borne supérieure de $A$ si et seulement si $\\forall x \\in A , x \\leq m$ et $\\forall y \\in A, (\\forall x \\in A, x \\leq y) \\Rightarrow (m \\leq y)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "$\\forall x \\in A , x \\leq m$ et $\\forall y \\in \\R, (\\forall x \\in A, x \\leq y) \\Rightarrow (m \\leq y)$.\nIl faut prendre $y$ dans $\\R$,"
       }
     ]
   },
@@ -803,24 +950,6 @@
       },
       {
         "text": "Si $(u_n)_n$ est arithmétique de raison $a$, alors $\\forall n \\in \\N, u_n = u_0 + an$.",
-        "answers": [
-          "True",
-          "False"
-        ],
-        "correct": 0,
-        "explanation": ""
-      },
-      {
-        "text": "La borne supérieure de $A$ est un élément de $A$.",
-        "answers": [
-          "True",
-          "False"
-        ],
-        "correct": 1,
-        "explanation": ""
-      },
-      {
-        "text": "Le minimum de $A$ est un minorant qui est un élément de $A$.",
         "answers": [
           "True",
           "False"
@@ -856,7 +985,7 @@
         "explanation": ""
       },
       {
-        "text": "$(u_n)_n$ est positive /à partir d'un certain rang/ si $\\forall n \\in \\N, \\exists m \\geq n, u_{m} \\geq 0$.",
+        "text": "$(u_n)_n$ est positive (ou nulle) /à partir d'un certain rang/ si $\\forall n \\in \\N, \\exists m \\geq n, u_{m} \\geq 0$.",
         "answers": [
           "True",
           "False"
@@ -919,7 +1048,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Un évènement est *une partie* de l'univers $\\Omega$."
       }
     ]
   }

@@ -578,7 +578,7 @@ nav{
 .about-section h2 {
   font-family: 'Syne', sans-serif;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -621,7 +621,7 @@ nav{
 .odds-table th {
   font-family: 'Syne', sans-serif;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -641,7 +641,7 @@ nav{
 
 .odds-table td:first-child {
   font-family: 'Syne', sans-serif;
-  font-weight: 700;
+  font-weight: 650;
   color: var(--accent2);
 }
 
@@ -672,7 +672,7 @@ nav{
 .score-ex-pct {
   font-family: 'Syne', sans-serif;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
   min-width: 3.5rem;
 }

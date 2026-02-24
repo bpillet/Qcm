@@ -59,10 +59,15 @@ def parse_question(block, idx_for_warnings):
         return None
 
     # :CORRECT:
-    correct_m = re.search(r':CORRECT:\s*(V|F)', block)
-    if correct_m:
+    if tag == "Mult":
+        correct_m = re.search(r':CORRECT:\s*(\d+)', block)
+    else:
+        correct_m = re.search(r':CORRECT:\s*(V|F)', block)
+    if correct_m and tag == "TF":
         val = correct_m.group(1)
         correct = 0 if val == 'V' else 1
+    elif correct_m:
+        correct = int(correct_m.group(1))
     else:
         print(f"⚠️  Question {idx_for_warnings}: no :CORRECT: — defaulting to 0 (True).",
               file=sys.stderr)
@@ -89,7 +94,7 @@ def parse_question(block, idx_for_warnings):
                    for a in re.findall(r'^\s*-\s+(.+)', raw, re.MULTILINE)]
 
     # Explanation
-    explanation = find_subheading(block, 'Explications') or ''
+    explanation = find_subheading(block, 'Explication') or ''
 
     return {
         "text":        question_text,

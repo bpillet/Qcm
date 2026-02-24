@@ -238,7 +238,7 @@ function renderQuestions() {
     card.innerHTML = `
       <div class="question-text">${q.text}</div>
       ${isTF ? renderTrueFalse(qi) : renderSliders(qi, q)}
-      <div class="slider-hint">Déplace le${n > 2 ? 's' : ''} slider${n > 2 ? 's' : ''} pour indiquer ton niveau de confiance puis confirme.</div>
+      <div class="slider-hint">Déplace le${n > 2 ? 's' : ''} curseur${n > 2 ? 's' : ''} pour indiquer ton niveau de confiance puis confirme.</div>
       <button class="btn-confirm" onclick="confirmAnswer(${qi})">Confirmer</button>
       <div class="feedback" id="fb-${qi}"></div>
     `;
@@ -1037,10 +1037,15 @@ def parse_question(block, idx_for_warnings):
         return None
 
     # :CORRECT:
-    correct_m = re.search(r':CORRECT:\s*(V|F)', block)
-    if correct_m:
+    if tag == "Mult":
+        correct_m = re.search(r':CORRECT:\s*(\d+)', block)
+    else:
+        correct_m = re.search(r':CORRECT:\s*(V|F)', block)
+    if correct_m and tag == "TF":
         val = correct_m.group(1)
         correct = 0 if val == 'V' else 1
+    elif correct_m:
+        correct = int(correct_m.group(1))
     else:
         print(f"⚠️  Question {idx_for_warnings}: no :CORRECT: — defaulting to 0 (True).",
               file=sys.stderr)
@@ -1067,7 +1072,7 @@ def parse_question(block, idx_for_warnings):
                    for a in re.findall(r'^\s*-\s+(.+)', raw, re.MULTILINE)]
 
     # Explanation
-    explanation = find_subheading(block, 'Explications') or ''
+    explanation = find_subheading(block, 'Explication') or ''
 
     return {
         "text":        question_text,
@@ -1192,7 +1197,7 @@ python3 -m http.server
 
 #+RESULTS:
 
-* TODO TAF [5/14]                                      :noexport:
+* TODO TAF [8/13]                                      :noexport:
 
 - [X] Faire un dépot Git à part
 - [X] Gérer plusieurs QCM et le choix du thème
@@ -1200,28 +1205,171 @@ python3 -m http.server
   - [X] Intégrer sa réponse (4 fichiers à modifier)
 - [?] Ajout de tags ?
 - [X] Intégrer mes macro LaTeX perso
+- [X] Modifier l'export en json pour ne prendre en compte que les header taggués =:Cuise:=
+- [X] Corriger l'export des corrections.
+- [ ] Traduire la réponse correcte true/false (python + js ?)
+- [ ] Améliorer le CSS
+  - [ ] choix des topics
+  - [ ] Liens (comment ça marche...)
+- [-] Convertir les anciens QCM
+  - [X] Automatiser les traductions
+  - [ ] Ajouter des explications
+  - [ ] Vérifier les énoncés
+- [-] créer d'autres QCM.
+  - [X] Trigo
+  - [ ] Calcul
+  - [ ] Autre
+- [X] Créer une page d'explications
+- [X] Modifier les compteurs pour être en 0 et 99.
+- [X] Vérifier si c'est ok sur portable
+- [ ] Mettre sur le site de la TSI1
+
+
+** Someday
+
 - [-] Améliorer le HTML
   - [ ] h2  au lieu de =<span id = 'quiz topic title'>=
   - [X] nav
   - [X] article
   - [ ] sections
-- [X] Modifier l'export en json pour ne prendre en compte que les header taggués =:Cuise:=
-- [ ] Corriger l'export des corrections.
-- [ ] Améliorer le CSS
-  - [ ] choix des topics
-- [-] Convertir les anciens QCM
-  - [X] Automatiser les traductions
-  - [ ] Ajouter des explications
-- [ ] créer d'autres QCM.
-- [ ] Créer une page d'explications
-- [X] Modifier les compteurs pour être en 0 et 99.
 - [ ] Appréciations : modifier le js pour repérer les grands écarts croyance-vérité et utiliser les appréciations pour le signaler.
-- [ ] Vérifier si c'est ok sur portable
-- [ ] Mettre sur le site de la TSI1é
+- [ ] Curseurs logarithmiques ?
+- [ ] Traiter les orgs syntax sugar '/italic/', '*bold*, ...
+- [ ] Randomiser l'ordre des questions
 
 * QCM par thèmes
 
 file:~/Git/tsi/QCM/
+
+
+** Trigo                                                  :Cuise:
+
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 3
+:END:
+
+$\cos\left(-\frac {3\pi} 2\right) =$
+
+**** Answers
+
+- $\frac {\sqrt 2} 2$
+- $-\frac {\sqrt 2} 2$
+- $-\frac 1 2$
+- $0$
+  
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+$\cos\left(0\right) =$
+
+**** Answers
+
+- $0$
+- $1$
+- $-1$
+- pas défini.
+
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+$\tan\left(0\right) =$
+
+**** Answers
+
+- $0$
+- $1$
+- $-1$
+- pas défini
+
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+$\sin\left(0\right) =$
+
+**** Answers
+
+- $0$
+- $1$
+- $-1$
+- pas défini
+
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+$\arctan\left(0\right) =$
+
+**** Answers
+
+- $0$
+- $1$
+- $\frac \pi 2$
+- pas défini
+
+  
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 0
+:END:
+
+$\arccos\left(1\right) =$
+
+**** Answers
+
+- $0$
+- $\pi$
+- $-1$
+- pas défini
+  
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 1
+:END:
+
+$\arccos\left(-1\right) =$
+
+**** Answers
+
+- $0$
+- $\pi$
+- $-1$
+- pas défini
+  
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 3
+:END:
+
+$\arcsin\left(\pi\right) =$
+
+**** Answers
+
+- $0$
+- $\pi$
+- $-1$
+- pas défini
+
+*** Question                                                 :Mult:
+:PROPERTIES:
+:CORRECT: 2
+:END:
+
+Pour $a,b \in R$, $\sin\left(b - a\right) =$
+
+**** Answers
+
+- $\sin(a)\cos(b) - \sin(b) \cos(a)$
+- $\sin(a)\sin(b) + \cos(b)\cos(a)$
+- $\sin(b)\cos(a) - \sin(a)\cos(b)$
+- $\cos(b)\sin(a) + \cos(a) \sin(b)$
 
 ** Fonctions                                              :Cuise:
 
@@ -1393,77 +1541,105 @@ Si $f(t) = \cos(t)$ alors il y a une solution particulière de la forme $t \maps
 :END:
 
  Le groupe des racines \(n\)-èmes de l'unité est $\ens{z \in \C}{ \vert z \vert = 1}$.
+**** Explication
+
+Ça c'est le groupe unitaire. D'ailleurs on voit bien que ça ne dépend pas de $n$.
+ 
 *** Question      :TF:
 :PROPERTIES:
 :CORRECT: F
 :END:
 
- $\sqrt i$ est l'unique solution de partie imaginaire positive de $z^2 = i$.
+$\sqrt i$ est l'unique solution de partie imaginaire positive de $z^2 = i$.
+
+**** Explication
+
+Ce nombre n'existe pas ! $\sqrt a$ n'a de sens que si $a \in \R^+$.
+ 
+*** Question      :TF:
+:PROPERTIES:
+:CORRECT: V
+:END:
+
+Les solutions complexes de $z^5 = -3$ sont les affixes des sommets d'un pentagone régulier.
+
+**** Explication
+
+Il s'agit des $\sqrt[5]{3}e^{i\pi(1/5 + 2k/5)}$ pour $0 \leq k < 5$. Ce sont $5$ points sur le cercle de centre l'origine et de rayon $\sqrt[5]{3}$.
 
 *** Question      :TF:
 :PROPERTIES:
 :CORRECT: V
 :END:
 
- Les solutions complexes de $z^5 = -3$ sont les affixes des sommets d'un pentagone régulier.
+Une équation du second degré sur $\C$ possède toujours 1 ou 2 solutions.
 
-*** Question      :TF:
-:PROPERTIES:
-:CORRECT: V
-:END:
+**** Explication
 
- Une équation du second degré sur $\C$ possède toujours 1 ou 2 solutions.
-
+C'est un cas particulier du théorème de D'Alembert-Gauss.
 
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- $(1 - i)^2 = -2i$.
+$(1 - i)^2 = -2i$.
+
  
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- Si $z = x + iy$ avec $x,y \in \R$ et $x > 0$, alors $\Aarg(z) = \arctan(y/x)$.
+Si $z = x + iy$ avec $x,y \in \R$ et $x > 0$, alors $\Aarg(z) = \arctan(y/x)$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- $\vert z - z_A \vert$ est la distance entre les points d'affixe $z$ et $z_A$.
+$\vert z - z_A \vert$ est la distance entre les points d'affixe $z$ et $z_A$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  F
 :END:
 
 $\Aarg(z + w) \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
+
+**** Explication
+
+$\Aarg(z \times w)   \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- $\vert zw \vert = \vert z \vert \times \vert w \vert$.
+$\vert zw \vert = \vert z \vert \times \vert w \vert$.
+
+ 
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- $2\cos(t) = e^{it} + e^{-it}$.
+$2\cos(t) = e^{it} + e^{-it}$.
+
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- $2i\Im(z) = z - \bar z$.
+$2i\Im(z) = z - \bar z$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- $\Im(z)$ est un nombre réel.
+$\Im(z)$ est un nombre réel.
  
 ** Divers                                                 :Cuise:
 
@@ -1473,15 +1649,20 @@ $\Aarg(z + w) \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
 :CORRECT: F
 :END:
 
- $\displaystyle (a + b)^n = \sum_{k = 0}^n \binom n k a^k b^n$
-
+Pour $a,b \in \R$ et $n \in \N$ :
+\[
+(a + b)^n = \sum_{k = 0}^n \binom n k a^k b^n
+\]
 
 *** Question      :TF:
 :PROPERTIES:
 :CORRECT: V
 :END:
 
- $\binom {n} {k + 1} + \binom {n} k  = \binom {n + 1} {k + 1}$
+Pour $n,k \in \N$ avec $0 \leq k \leq n$ : 
+\[
+\binom {n} {k + 1} + \binom {n} k  = \binom {n + 1} {k + 1}
+\]
 
 
 *** Question                                                 :TF:
@@ -1489,14 +1670,14 @@ $\Aarg(z + w) \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
 :CORRECT:  V
 :END:
 
- La proposition $\Pp$ est /héréditaire/ si $\forall n \in \N, \Pp(n) \Rightarrow \Pp(n+1)$.
+La proposition $\Pp$ est /héréditaire/ si $\forall n \in \N, \Pp(n) \Rightarrow \Pp(n+1)$.
 
  
 
 ** Géométrie 3D                                           :Cuise:
 
 
-
+$\left(\iv,\jv,\ov k\right)$ est une base orthonormée directe de l'espace. $\ov u,\ov v$ et $\ov w$ sont trois vecteurs de l'espace quelconques.
 
 *** Question      :TF:
 :PROPERTIES:
@@ -1578,12 +1759,7 @@ $\Aarg(z + w) \equiv \Aarg(z) + \Aarg(w) [2\pi]$.
 :END:
 
  Le projeté orthogonal d'un point de l'espace sur une droite existe toujours.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  F
-:END:
-
-Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.
+ 
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  F
@@ -1694,7 +1870,7 @@ Une fonction dont la dérivée est nulle sur $\R^*$ est forcément constante.
 :END:
 
 \[
-\sum_{k = 1}^n q^k = \dfrac {1-q^{n + 1}} {1 - q}
+\forall q \in R, \quad \sum_{k = 1}^n q^k = \dfrac {1-q^{n + 1}} {1 - q}
 \]
 
 **** Explication
@@ -1753,6 +1929,17 @@ Il est possible d'avoir une matrice (ou un système) sous forme échelonné dont
 
 *** Question                                                 :TF:
 :PROPERTIES:
+:CORRECT:  F
+:END:
+
+Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.
+
+**** Explication
+
+Ce n'est vrai que quand le système le système est sous-forme /échelonnée/.
+
+*** Question                                                 :TF:
+:PROPERTIES:
 :CORRECT:  V
 :END:
 
@@ -1779,6 +1966,10 @@ L'inverse d'une matrice inversible est inversible.
 
 $\left(M + N\right)^n = \sum_{k = 0}^n \binom n k M^k N^{n - k}$.
 
+**** Explication
+
+La formule est correcte à condition que $M$ et $N$ *commutent* ! ! 
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  F
@@ -1803,30 +1994,91 @@ Soit $E$ un ensemble à $n$ éléments.
 :END:
 
 Le nombre de parties de $E$ est $n^2$.
+
+**** Explication
+
+Le nombre de parties de $E$ est $2^n$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  F
 :END:
 
 Le cardinal d'une partie à $p$ éléments de $E$ est $\binom n p$.
+
+**** Explication
+
+Quelle est la couleur du cheval blanc d'Henri IV ?
+...
+Quel est le cardinal d'une partie à $p$ éléments ?
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  F
 :END:
 
 L'ensemble des \(p\)-liste d'éléments distincts de $E$ est $\frac {n!} {(n - p)!}$.
+
+**** Explication
+
+$\frac {n!} {(n - p)!}$ est un nombre ; la question demande un ensemble !
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
  Il y a $n!$ façons d'ordonner les éléments de $E$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  F
 :END:
 
 Un \(p\)-uplet est un ensemble à $p$ éléments.
+
+**** Explication
+
+Un \(p\)-uplet n'est pas un ensemble, il peut contenir plusieurs fois le même élément et l'ordre des éléments compte.
+
+
+** Inégalités, majorant, minorant                         :Cuise:
+
+Soit $A$ une partie de $\R$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+La borne supérieure de $A$ est un élément de $A$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+Le minimum de $A$ est un minorant qui est un élément de $A$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+$m \in \R$ est la borne supérieure de $A$ si et seulement si $\forall x \in A , x \leq m$ et $\forall y \in \R, (y < m) \Rightarrow (\exists x \in A, y < a)$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  F
+:END:
+
+$m \in \R$ est la borne supérieure de $A$ si et seulement si $\forall x \in A , x \leq m$ et $\forall y \in A, (\forall x \in A, x \leq y) \Rightarrow (m \leq y)$.
+
+**** Explication
+
+$\forall x \in A , x \leq m$ et $\forall y \in \R, (\forall x \in A, x \leq y) \Rightarrow (m \leq y)$.
+Il faut prendre $y$ dans $\R$, 
+
 
 ** Suites                                                 :Cuise:
 
@@ -1848,25 +2100,14 @@ Une suite géométrique tend toujours vers $\pm \infty$.
 :CORRECT:  V
 :END:
 
- Si $(u_n)_n$ est arithmétique de raison $a$, alors $\forall n \in \N, u_n = u_0 + an$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  F
-:END:
-
-La borne supérieure de $A$ est un élément de $A$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  V
-:END:
-
- Le minimum de $A$ est un minorant qui est un élément de $A$.
+Si $(u_n)_n$ est arithmétique de raison $a$, alors $\forall n \in \N, u_n = u_0 + an$.
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
  Si $\left(u_n\right)_n$ est arithmético-géométrique et $\ell$ est son point fixe alors $\left(u_n - \ell\right)_n$ est géométrique.
+ 
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
@@ -1884,7 +2125,7 @@ Si $P(\lambda) = 0$, alors $\left(\lambda^n\right)_n$ et $\left(n\lambda^n\right
 :CORRECT:  F
 :END:
 
-$(u_n)_n$ est positive /à partir d'un certain rang/ si $\forall n \in \N, \exists m \geq n, u_{m} \geq 0$.
+$(u_n)_n$ est positive (ou nulle) /à partir d'un certain rang/ si $\forall n \in \N, \exists m \geq n, u_{m} \geq 0$.
 
 
 ** Suites bis                                             :Cuise:
@@ -1905,6 +2146,7 @@ Soit $(u_n)_n$ une suite convergeant vers $\ell \in \R$.
 :END:
 
 $\forall \varepsilon > 0, \exists n_0 \in \N, \forall n \geq n_0, \ell - \varepsilon \leq u_n \leq l + \varepsilon$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
@@ -1927,6 +2169,10 @@ Une suite /croissante à partir d'un certain rang/ est croissante.
 :END:
 
 Un /évènement/ est un élément de l'/univers/ $\Omega$ décrivant une /expérience aléatoire/.
+
+**** Explication
+
+Un évènement est *une partie* de l'univers $\Omega$.
 
 ** TODO Équivalents                                       :Bayes:
 
