@@ -92,12 +92,12 @@
         "explanation": ""
       },
       {
-        "text": "Pour $a,b \\in R$, $\\sin\\left(b - a\\right) =$",
+        "text": "<p>\nPour \\(a,b \\in R\\), \\(\\sin\\left(b - a\\right) =\\)\n</p>\n<ol class=\"org-ol\">\n<li>\\(\\sin(a)\\cos(b) - \\sin(b) \\cos(a)\\)</li>\n<li>\\(\\sin(a)\\sin(b) + \\cos(b)\\cos(a)\\)</li>\n<li>\\(\\sin(b)\\cos(a) - \\sin(a)\\cos(b)\\)</li>\n<li>\\(\\cos(b)\\sin(a) + \\cos(a) \\sin(b)\\)</li>\n</ol>",
         "answers": [
-          "$\\sin(a)\\cos(b) - \\sin(b) \\cos(a)$",
-          "$\\sin(a)\\sin(b) + \\cos(b)\\cos(a)$",
-          "$\\sin(b)\\cos(a) - \\sin(a)\\cos(b)$",
-          "$\\cos(b)\\sin(a) + \\cos(a) \\sin(b)$"
+          "1.",
+          "2.",
+          "3.",
+          "4."
         ],
         "correct": 2,
         "explanation": ""
@@ -220,7 +220,7 @@
     "texte": "\n\n\nSoit $(E) : ay'' + by' + cy = f$ une équation différentielle linéaire à coefficients constants réels, ($H$) l'équation homogène associée et $(EC)$ l'équation caractéristique associée, $\\Delta$ son discriminant.\n\n",
     "questions": [
       {
-        "text": "$\\Sol(E) = \\ensp{y_p + h}{h \\in \\Sol(H)$} où $y_p$ est solution particulière.",
+        "text": "$\\Sol(E) = \\ensp{y_p + h}{h \\in \\Sol(H)}$ où $y_p$ est solution particulière.",
         "answers": [
           "True",
           "False"
@@ -271,7 +271,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Il se peut que $1$ soit solution de $(EC)$ et dans ce cas $t \\mapsto Ke^t$ est solution de $(H)$ et pas de $(E)$."
       },
       {
         "text": "Si $f(t) = \\cos(t)$ alors il y a une solution particulière de la forme $t \\mapsto A\\cos(t)$ avec $A \\in \\R$.",
@@ -280,7 +280,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Premièrement la solution particulière est de la forme $t \\mapsto A\\cos(t) + B\\sin(t)$ en général. Et de plus, si $i = i\\times 1$ est solution de $(EC)$, alors $A\\cos$ et même $A\\cos + B\\sin$ sont des solution homogènes et donc pas des solutions de $(E)$."
       },
       {
         "text": "Si $f(t) = \\sin(2t)$ et $2i$ est solution de ($EC$) alors on cherchera une solution particulière de la forme $t \\mapsto At\\cos(2t) + Bt\\sin(2t)$ avec $A,B \\in \\R$.",
@@ -341,6 +341,15 @@
         ],
         "correct": 1,
         "explanation": "Ça c'est le groupe unitaire. D'ailleurs on voit bien que ça ne dépend pas de $n$."
+      },
+      {
+        "text": "Les racines $7$ èmes de l'unité sont les $e^{i \\frac {k\\pi} 7}$ pour $k$ variant de $0$ à $6$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "Ce sont les $e^{i \\frac {2k\\pi} 7}$ pour $k$ variant de $0$ à $6$."
       },
       {
         "text": "$\\sqrt i$ est l'unique solution de partie imaginaire positive de $z^2 = i$.",
@@ -444,6 +453,120 @@
     ]
   },
   {
+    "title": "Ensembles",
+    "texte": "\n\nOn note $X = \\{1,2,3\\}$\n\n",
+    "questions": [
+      {
+        "text": "\\[\n1 \\in X\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\n1 \\subseteq X\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\n\\{1\\} \\subseteq X\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\n\\emptyset \\in X\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\n\\emptyset \\subseteq X\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\n\\{\\emptyset\\} \\subseteq \\Pp(X)\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\n1 \\in \\Pp(X)\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\nE \\subseteq \\bigcup_{i = 1}^n A_i \\; \\Leftrightarrow \\; \\forall x\\in E, \\exists i \\in \\{1,2,\\cdots, n\\}, x \\in A_i\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "\\[\nE \\supseteq \\bigcup_{i = 1}^n A_i \\; \\Leftrightarrow \\; \\exists i \\in \\{1,2,\\cdots,n\\} A_i \\subseteq E\n\\]",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "\\[\nE \\supseteq \\bigcup_{i = 1}^n A_i \\; \\Leftrightarrow \\; \\forall i \\in \\{1,2,\\cdots,n\\} A_i \\subseteq E\n\\]"
+      },
+      {
+        "text": "Deux parties disjointes de $E$ ne peuvent pas être égales.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "$A = \\emptyset$ et $B = \\emptyset$ sont disjointes $A \\cap B = \\emptyset$ et égales $A = B$. C'est le seul cas."
+      },
+      {
+        "text": "Deux parties disjointes de $E$ sont forcément distinctes.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "C'est la même question que ci-dessus. $A$ et $B$ distinctes signifie que $A \\neq B$."
+      },
+      {
+        "text": "Deux parties distinctes de $E$ sont forcément disjointes.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "Si $E$ a plus de deux éléments, pour $a \\in E$, $E$ et $\\{a\\}$ sont distinctes (ce n'est pas le même ensemble) mais pas disjointes (elles ont $a$ en commun)."
+      }
+    ]
+  },
+  {
     "title": "Divers",
     "texte": "",
     "questions": [
@@ -508,24 +631,6 @@
         "explanation": ""
       },
       {
-        "text": "Au cours de la résolution d'un système, un /pivot/ est une opération faisant apparaître un zéro.",
-        "answers": [
-          "True",
-          "False"
-        ],
-        "correct": 1,
-        "explanation": ""
-      },
-      {
-        "text": "Les racines $7$ èmes de l'unité sont les $e^{i \\frac {k\\pi} 7}$ pour $k$ variant de $0$ à $6$.",
-        "answers": [
-          "True",
-          "False"
-        ],
-        "correct": 1,
-        "explanation": ""
-      },
-      {
         "text": "Un système $3 \\times 3$ a toujours : $0$, $3$ ou une infinité de solutions.",
         "answers": [
           "True",
@@ -541,7 +646,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "$\\det\\left(\\ov u, \\ov v, \\ov w\\right) = \\left(\\ov u \\wedge \\ov v\\right) \\cdot \\ov w = - \\left(\\ov u \\wedge \\ov w\\right) \\cdot \\ov v$."
       },
       {
         "text": "$\\ov u \\wedge \\ov v = \\Nld{\\ov u}\\Nld{\\ov v} \\left\\vert \\sin\\left(\\widehat{\\ov u,\\ov v}\\right)\\right\\vert$.",
@@ -550,7 +655,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "À gauche de l'égalité c'est un vecteur à droite c'est un nombre. Cette égalité est pire que fausse : elle est mal typée !"
       },
       {
         "text": "$\\det\\left(\\ov {u}, \\ov {v}, \\ov {w}\\right) = 1$ si et seulement si $\\left(\\ov u, \\ov v, \\ov w\\right)$ est une base est orthonormée directe.",
@@ -559,7 +664,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "$\\left\\vert \\det\\left(\\ov {u}, \\ov {v}, \\ov {w}\\right) \\right\\vert$ est le volume du parallélépipède engendré par les trois vecteurs. On peut avoir un parallélépipède de volume 1 sans que ce soit un cube (ce qui signifierai que la base est orthonormée)."
       },
       {
         "text": "$\\ov k \\wedge \\jv = -\\iv$",
@@ -586,7 +691,7 @@
           "False"
         ],
         "correct": 1,
-        "explanation": ""
+        "explanation": "Dans l'espace, ce sont les plans qui ont une équation. Les droites en ont deux (un système de deux)."
       }
     ]
   },
@@ -732,7 +837,7 @@
           "True",
           "False"
         ],
-        "correct": 0,
+        "correct": 1,
         "explanation": "Il y avait deux erreurs :\n\nLe premier terme est $q^1 = q$, toute la somme peut se factoriser par $q$ : \n\\[\n\\sum_{k = 1}^n q^k = q \\sum_{m = 0}^{n - 1} q^m = q\\dfrac {1-q^{n}} {1 - q}\n\\]\nDe plus, la formule n'est valable que pour $q \\neq 1$."
       }
     ]
@@ -776,6 +881,15 @@
         ],
         "correct": 0,
         "explanation": "Lisez attentivement l'énoncé !\n\nIl est possible d'avoir une matrice (ou un système) sous forme échelonné dont toutes les lignes ont au moins un coefficient non nul."
+      },
+      {
+        "text": "Au cours de la résolution d'un système, un /pivot/ est une opération faisant apparaître un zéro.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
       },
       {
         "text": "Le rang c'est le nombre de premiers éléments non nuls de chaque ligne.",
@@ -895,8 +1009,21 @@
   },
   {
     "title": "Inégalités, majorant, minorant",
-    "texte": "\n\nSoit $A$ une partie de $\\R$.\n\n",
+    "texte": "\n\nSoit $A$ une partie de $\\R$.\n\n\n",
     "questions": [
+      {
+        "text": "<p>\nUne fonction \\(f: I \\to \\R\\)  est croissante si et seulement si : \n</p>\n\n<ol class=\"org-ol\">\n<li>\\(\\forall a, b \\in I, f(a) \\leq f(b)\\)</li>\n<li>\\(\\forall a, b \\in I, a \\leq b \\wedge f(a) \\leq f(b)\\)</li>\n<li>\\(\\forall a, b \\in I, a > b \\wedge f(a) \\leq f(b)\\)</li>\n<li>\\(\\exists a, b \\in I, f(a) \\leq f(b)\\)</li>\n<li>\\(\\forall a, b \\in I, a \\leq b \\Rightarrow f(a) \\leq f(b)\\)</li>\n<li>\\(\\forall x \\in I, f(x) \\leq f(x + 1)\\)</li>\n</ol>",
+        "answers": [
+          "1.",
+          "2.",
+          "3.",
+          "4.",
+          "5.",
+          "6."
+        ],
+        "correct": 4,
+        "explanation": ""
+      },
       {
         "text": "La borne supérieure de $A$ est un élément de $A$.",
         "answers": [
@@ -937,7 +1064,7 @@
   },
   {
     "title": "Suites",
-    "texte": "\n\nSoient $\\beta,\\gamma \\in \\R$,\n\\[\n\\tag{\\star}\\label{eq} \\forall n \\in \\N, u_{n + 2} = \\beta u_{n + 1} + \\gamma u_n.\n\\]\net $P(X) = 0$ son équation caractéristique.\n# , $\\Delta$ son discriminant.\n\n",
+    "texte": "\n\nSoient $\\beta,\\gamma \\in \\R$,\n\\[\n\\tag{$\\star$}\\label{eq} \\forall n \\in \\N, u_{n + 2} = \\beta u_{n + 1} + \\gamma u_n.\n\\]\net $P(X) = 0$ son équation caractéristique.\n\n",
     "questions": [
       {
         "text": "Une suite géométrique tend toujours vers $\\pm \\infty$.",
@@ -1039,7 +1166,7 @@
   },
   {
     "title": "Probabilités",
-    "texte": "",
+    "texte": "\n\nSoit $(\\Omega,\\Pro)$ un espace probabilisé.\nSoient $A,B$ deux évènements de probabilités non-nulles. Soit $(E_1,\\cdots, E_n)$ un système complet d'évènements avec $\\forall i, \\Pro(E_i) \\neq 0$.\n\n",
     "questions": [
       {
         "text": "Un /évènement/ est un élément de l'/univers/ $\\Omega$ décrivant une /expérience aléatoire/.",
@@ -1049,6 +1176,42 @@
         ],
         "correct": 1,
         "explanation": "Un évènement est *une partie* de l'univers $\\Omega$."
+      },
+      {
+        "text": "$\\Pro(A) = \\dfrac {\\Card(A)}{\\Card(\\Omega)}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "Cette proposition est fausse en générale ; elle est vraie si l'espace probabilisé est en situation d'équiprobabilité : $\\forall \\omega \\in \\Omega, \\Pro\\left(\\{\\omega\\}\\right) = \\frac 1 {\\Card(\\Omega)}$."
+      },
+      {
+        "text": "$\\Pro(A \\cup B) = \\Pro(A) + \\Pro(B)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "Cette proposition est fausse en générale ; elle est vraie si $A$ et $B$ sont disjoints (incompatibles)."
+      },
+      {
+        "text": "$\\left(A, \\bar A\\right)$ est un système complet d'évènements.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Pro : \\Omega \\to \\Iff 0 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
       }
     ]
   }
