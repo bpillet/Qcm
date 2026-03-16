@@ -1214,5 +1214,146 @@
         "explanation": ""
       }
     ]
+  },
+  {
+    "title": "Équivalents",
+    "texte": "\n\nSoit $(u_n)_n$ une suite réelle.\n\n",
+    "questions": [
+      {
+        "text": "Si $u_n \\to +\\infty$, alors $\\cos(u_n) \\sim u_n$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $u_n \\to 0$, alors $\\sin(u_n) \\sim u_n$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\ln(1/n) \\sim \\frac 1 n$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$n^3 = \\po{}\\left(e^n\\right)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\tan(u_n) \\sim 1 + \\tan^2(u_n)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $u_n \\to 0$, alors $\\ln(1 + u_n) \\sim u_n$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$n = \\gO{}(n)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arctan\\left(n^3\\right) \\sim \\frac \\pi 2$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\exp\\left(n\\right) - 1 \\simeq n$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\cos\\left(\\frac 1 {\\sqrt n}\\right) \\simeq \\frac 1 {2n}$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\ln\\left(\\dfrac {n + 1} n \\right) \\sim \\frac 1 n$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\ln\\left(1 + n \\right) - 1 \\sim n$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Pour $p \\in \\N^*$ et si $u_n \\to 0$, alors $\\sqrt[p]{1 + u_n} - 1 \\sim \\frac {u_n} {p}$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Pour $\\alpha \\in \\R$, $\\left(1 + n\\right)^{\\alpha} - 1 \\sim \\alpha n$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Pour $\\alpha \\in \\R^{+*}$, $\\left(1 + e^{-n}\\right)^{\\alpha} \\sim \\alpha e^{-n}$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
   }
 ]
