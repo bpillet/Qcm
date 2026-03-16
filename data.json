@@ -1212,12 +1212,39 @@
         ],
         "correct": 1,
         "explanation": ""
+      },
+      {
+        "text": "$\\Pro(A\\cap B) = \\Pro_A(B)\\Pro(A)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Pro(A) = \\displaystyle\\sum_{k = 1}^n \\Pro_{E_i}(A)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Pro_A(B) = \\dfrac {\\Pro(B)\\Pro_B(A)}{\\Pro(B)\\Pro_B(A) + \\Pro(\\bar B)\\Pro_{\\bar B}(A)}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
       }
     ]
   },
   {
     "title": "Équivalents",
-    "texte": "\n\nSoit $(u_n)_n$ une suite réelle.\n\n",
+    "texte": "\n\n\nSoit $(u_n)_n$ une suite réelle.\n\n",
     "questions": [
       {
         "text": "Si $u_n \\to +\\infty$, alors $\\cos(u_n) \\sim u_n$.",
@@ -1346,12 +1373,108 @@
         "explanation": ""
       },
       {
-        "text": "Pour $\\alpha \\in \\R^{+*}$, $\\left(1 + e^{-n}\\right)^{\\alpha} \\sim \\alpha e^{-n}$",
+        "text": "Pour $\\alpha \\in \\R^{+*}$, $\\left(1 + e^{-n}\\right)^{\\alpha} \\sim \\alpha e^{-n}$\n>>>>>>> 22c3ce1 (Ajout Équivalents)",
         "answers": [
           "True",
           "False"
         ],
         "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Libre et génératrice",
+    "texte": "\n \nSoit $\\Tt = (u_1,\\cdots, u_p)$ une famille de vecteurs de $\\R^n$.\nSoit $A \\in \\Mm_{n,p}(\\R)$. On note $C_1, C_2 \\cdots C_p$ les colonnes de $A$ et $\\Ll = (C_1,C_2,\\cdots, C_p)$. Soit $f$ une fonction de $\\R$ dans $\\R$.\n\n",
+    "questions": [
+      {
+        "text": "$\\Tt$ est libre si et seulement si $0 \\ov {u_1} + 0\\ov{u_2} + \\cdots  + 0\\ov{u_p} = \\ov 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $n = p$ alors $\\Tt$ est libre.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Tt$ est génératrice de $\\R^n$ si et seulement si $\\forall v \\in \\R^n, \\exists \\alpha_1, \\cdots, \\alpha_p \\in \\R, v = \\displaystyle\\sum_{i = 1}^p \\alpha_i u_i$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Ker(A) = \\ens{X \\in \\Mm_{n,1}(\\R)}{AX = \\ov 0_p}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Vect(\\Tt)$ est l'ensemble des combinaisons linéaires des vecteurs de $\\Tt$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Ll \\in \\left(\\Mm_{n,1}(\\R)\\right)^p$",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\Image(A) = \\ensp{AX}{X \\in \\Mm_{p,1}(\\R)}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$AX$ est une combinaison linéaire des vecteurs colonnes de $A$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$AX = Y$ encode un système linéaire à $n$ équations et $p$ inconnues.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$AX = \\ov 0_n$ possède une unique solution si et seulement si $\\Ll$ est libre.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
         "explanation": ""
       }
     ]
