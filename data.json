@@ -1239,6 +1239,24 @@
         ],
         "correct": 0,
         "explanation": ""
+      },
+      {
+        "text": "$\\Pro(A \\cap B) = \\Pro(A) \\Pro(B)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "La formule des probabilités totales donne : $\\Pro(A) = \\Pro(B)\\Pro_B(A)+\\Pro\\left(\\bar B\\right)\\Pro_{\\bar B}(A)$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
       }
     ]
   },
@@ -1319,7 +1337,7 @@
         "explanation": ""
       },
       {
-        "text": "$\\exp\\left(n\\right) - 1 \\simeq n$",
+        "text": "$\\exp\\left(n\\right) - 1 \\sim n$",
         "answers": [
           "True",
           "False"
@@ -1328,7 +1346,7 @@
         "explanation": ""
       },
       {
-        "text": "$\\cos\\left(\\frac 1 {\\sqrt n}\\right) \\simeq \\frac 1 {2n}$",
+        "text": "$\\cos\\left(\\frac 1 {\\sqrt n}\\right) \\sim \\frac 1 {2n}$",
         "answers": [
           "True",
           "False"
@@ -1373,7 +1391,7 @@
         "explanation": ""
       },
       {
-        "text": "Pour $\\alpha \\in \\R^{+*}$, $\\left(1 + e^{-n}\\right)^{\\alpha} \\sim \\alpha e^{-n}$\n>>>>>>> 22c3ce1 (Ajout Équivalents)",
+        "text": "Pour $\\alpha \\in \\R^{+*}$, $\\left(1 + e^{-n}\\right)^{\\alpha} \\sim \\alpha e^{-n}$",
         "answers": [
           "True",
           "False"
@@ -1475,6 +1493,299 @@
           "False"
         ],
         "correct": 0,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Implications",
+    "texte": "\n<p>On dispose d'un jeu de cartes qui ont une lettre sur une face et un nombre sur l'autre.\nOn pioche 4 cartes :</p>\n\n<img src=\"Images/Cartes_regles_logique.png\" alt=\"1 ; C ; 7 ; E\">\n\n<p>Dans chaque cas, dire quelle(s) carte(s) il faut retourner pour vérifier si la règle suivante est vérifiée : </p>\n\n",
+    "questions": [
+      {
+        "text": "<p>\nSi il y a un <em>C</em> sur une face alors il y a un <em>1</em> au verso.\n</p>",
+        "answers": [
+          "1 et C",
+          "C et 7",
+          "C et E",
+          "Seulement C",
+          "1 et E",
+          "1,C et 7"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "<p>\nSi il y a une voyelle sur une face alors il y a un nombre impair au verso.\n</p>",
+        "answers": [
+          "1,7 et E",
+          "1,7 et C",
+          "1 et 7",
+          "Seulement E",
+          "Seulement C"
+        ],
+        "correct": 3,
+        "explanation": ""
+      },
+      {
+        "text": "<p>Si il y a une consonne sur une face alors il y a un nombre pair au verso.</p>",
+        "answers": [
+          "1,7 et E",
+          "1,7 et C",
+          "1 et 7",
+          "Seulement E",
+          "Seulement C"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "<p>Si il y a un <em>4</em> sur une face alors il y a un <em>D</em> au verso.</p>",
+        "answers": [
+          "E et C",
+          "1 et 7",
+          "Tout",
+          "1,7 et C",
+          "Seulement E"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "<p>Si il y a un <em>4</em> sur une face alors il y a un <em>C</em> au verso.</p>",
+        "answers": [
+          "E et C",
+          "1 et 7",
+          "Tout",
+          "1,7 et C",
+          "Seulement E",
+          "Seulement C"
+        ],
+        "correct": 4,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Équivalents II",
+    "texte": "\n\nSoit $u : \\R \\to \\R$ une fonction telle que $\\lim_{x \\to 1} u(x) = 0$ et $\\lim_{x \\to +\\infty} u(x) = 1$. Soit $\\alpha \\in \\R$. Soient $A$ et $B$ deux évènements d'un espace probabilisé $(\\Omega,\\Pro)$.\n\n",
+    "questions": [
+      {
+        "text": "Si $f(0) < 0$ et $f(1) > 0$ alors il existe $c \\in \\Ioo 0 1$ tel que $f(c) = 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f$ est monotone sur $\\R$, alors elle admet une limite en $-\\infty$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\sin(u(x)) \\sim x$ quand $x \\to 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$(u(x))^\\alpha = 1 + \\alpha (u(x) - 1) + \\po{}(u(x) - 1)$ quand $x \\to +\\infty$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$e^{\\frac 1 x} \\sim u(x)$ quand $x \\to + \\infty$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\arctan(u(x)) \\sim u(x)$ quand $x \\to 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\ln(u(x)) \\sim u(x) - 1$ quand $x \\to +\\infty$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "$\\cos(u(x)) = 1 + \\demi u(x)^2 + \\po{}\\left(u(x)\\right)$ quand $x \\to 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\left(x - 1\\right)^{u(x)} \\to 1$  quand $x \\to 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$\\sqrt{1 + u(x)} = \\demi u(x) + \\po{}\\left(u(x)\\right)$ quand $x \\to 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Polynômes",
+    "texte": "\n\nSoit $P \\in \\R[X]$.\n\n",
+    "questions": [
+      {
+        "text": "Un polynôme de degré $n$ a toujours $n$ racines distinctes.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "$(X-\\alpha)^k$ divise $P$ signifie que $\\alpha$ est racine de multiplicité $k$ de $P$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "Cela signifie que $\\alpha$ est racine de multiplicité <b>au moins</b> $k$ de $P$."
+      },
+      {
+        "text": "Tous les polynômes non-constants sont scindés sur $\\C$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": "C'est le théorème fondamental de l'algèbre (ou théorème de d'Alembert-Gauss)."
+      },
+      {
+        "text": "$\\tilde{P}'(\\alpha) = 0$ signifie que $\\alpha$ est racine double de $P$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      }
+    ]
+  },
+  {
+    "title": "Dérivabilité",
+    "texte": "\n\nSoit $f : \\R \\to \\R$ avec $a,b \\in \\R, a < b$. Soit $u,v : \\R \\to \\R$ dérivables $n$ fois.\n\n",
+    "questions": [
+      {
+        "text": "Toutes les fonctions dérivables en $0$ admettent un développement limité d'ordre $1$ en $0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f$ est continue en $a$ alors elle est dérivable en $a$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f$ est dérivable en $a$ alors elle est continue en $a$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": ""
+      },
+      {
+        "text": "Si $f$ n'est pas continue en $a$ alors elle n'est pas dérivable en $a$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": "C'est la contraposée de la proposition vraie : \"Si $f$ est dérivable en $a$ alors elle est continue en $a$.\""
+      },
+      {
+        "text": "Si $f$ n'est dérivable en $a$ alors elle n'est pas continue en $a$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "C'est la contraposée de la proposition fausse : \"Si $f$ est continue en $a$ alors elle est dérivable en $a$.\""
+      },
+      {
+        "text": "Si $f(b) = f(a)$ alors $\\exists c \\in \\Ioo a b, f'(c) = 0$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": "Il manque les hypothèses du théorème de Rolle : $f$ continue sur $\\Iff a b$  et dérivable sur $\\Ioo a b$."
+      },
+      {
+        "text": "$\\displaystyle (uv)^{(n)} = \\sum_{k = 0}^n \\binom n k u^{(k)}v^{(n)}$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
+        "explanation": ""
+      },
+      {
+        "text": "Si il existe $\\ell \\in \\R$ tel que $f(x) = f(1) + \\ell (x - 1) + \\po{x\\to 1}(x - 1)$ alors $f$ est dérivable en $1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 0,
+        "explanation": "Il s'agit d'un développement limité à l'ordre 1 de $f$ en $1$. Elle est donc dérivable et $f'(1) = \\ell$."
+      },
+      {
+        "text": "La fonction $x \\mapsto x^\\alpha$ (prolongée par continuité en $0$) est dérivable en $0$ \\ssi $\\alpha < 1$.",
+        "answers": [
+          "True",
+          "False"
+        ],
+        "correct": 1,
         "explanation": ""
       }
     ]
