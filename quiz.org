@@ -2520,11 +2520,10 @@ Pour $\alpha \in \R$, $\left(1 + n\right)^{\alpha} - 1 \sim \alpha n$
 
 Pour $\alpha \in \R^{+*}$, $\left(1 + e^{-n}\right)^{\alpha} \sim \alpha e^{-n}$
 
-** TODO QCM 20                                            :Bayes:
+** TODO Familles                                              :T:
 
-Soit $(\Omega,\Pro)$ un espace probabilisé.
-Soient $A,B$ deux évènements de probabilités non-nulles. Soit $(E_1,\cdots, E_n)$ un système complet d'évènements avec $\forall i, \Pro(E_i) \neq 0$.
-Soit $\Tt = (u_1,\cdots, u_p)$ une famille de vecteurs de $\R^n$.
+Soit $E$ un espace vectoriel sur $\K$.
+Soit $\Tt = (u_1,\cdots, u_p)$ une famille de vecteurs de $E$.
 
 *** Question                                                 :TF:
 :PROPERTIES:
@@ -2532,18 +2531,38 @@ Soit $\Tt = (u_1,\cdots, u_p)$ une famille de vecteurs de $\R^n$.
 :END:
 
 $\Tt$ est libre si et seulement si $0 \ov {u_1} + 0\ov{u_2} + \cdots  + 0\ov{u_p} = \ov 0$.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  F
 :END:
 
 Si $n = p$ alors $\Tt$ est libre.
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
 :END:
 
- $\Tt$ est génératrice de $\R^n$ si et seulement si $\forall v \in \R^n, \exists \alpha_1, \cdots, \alpha_p \in \R, v = \displaystyle\sum_{i = 1}^p \alpha_i u_i$.
+$\Tt$ est génératrice de $\R^n$ si et seulement si $\forall v \in \R^n, \exists \alpha_1, \cdots, \alpha_p \in \R, v = \displaystyle\sum_{i = 1}^p \alpha_i u_i$.
+
+*** Question                                                 :TF:
+:PROPERTIES:
+:CORRECT:  V
+:END:
+
+$\Vect(\Tt)$ est l'ensemble des combinaisons linéaires des vecteurs de $\Tt$.
+
+** EV                                                         :T:
+
+
+
+** TODO QCM 20                                            :Bayes:
+
+Soit $(\Omega,\Pro)$ un espace probabilisé.
+Soient $A,B$ deux évènements de probabilités non-nulles. Soit $(E_1,\cdots, E_n)$ un système complet d'évènements avec $\forall i, \Pro(E_i) \neq 0$.
+Soit $
+
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
@@ -2576,12 +2595,7 @@ Soit $A \in \Mm_{n,p}(\R)$. On note $C_1, C_2 \cdots C_p$ les colonnes de $A$ et
 :END:
 
 $\Ker(A) = \ens{X \in \Mm_{n,1}(\R)}{AX = \ov 0_p}$.
-*** Question                                                 :TF:
-:PROPERTIES:
-:CORRECT:  V
-:END:
 
- $\Vect(\Tt)$ est l'ensemble des combinaisons linéaires des vecteurs de $\Tt$.
 *** Question                                                 :TF:
 :PROPERTIES:
 :CORRECT:  V
@@ -2770,7 +2784,7 @@ $x \mapsto x^\alpha$ est dérivable en $0$ \ssi $\alpha < 1$.
 
  Si $f(x) = f(1) + \ell (x - 1) + \po{x\to 1}(x - 1)$ alors $f$ est dérivable en $1$.
 
-
+ 
 ** TODO QCM 24                                            :Bayes:
 :PROPERTIES:
 :EXPORT_FILE_NAME: /tmp/qcm24
